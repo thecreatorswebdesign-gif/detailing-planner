@@ -58,6 +58,8 @@ const conditieConfig = {
   "Pre-owned": { color: "#8b5cf6", bg: "#f5f3ff" },
   Nalopen: { color: "#f97316", bg: "#fff7ed" },
 };
+const UREN_OPTIONS = ["Maak een keuze", "1 uur", "1,5 uur", "2 uur", "2,5 uur", "3 uur", "3,5 uur", "4 uur", "4,5 uur", "5 uur", "5,5 uur", "6 uur", "6,5 uur", "7 uur", "7,5 uur", "8 uur", "8,5 uur", "9 uur", "9,5 uur", "10 uur", "11 uur", "12 uur", "13 uur", "14 uur", "15 uur"];
+
 const readyConfig = {
   Ja: { color: "#10b981", bg: "#ecfdf5", icon: "\u2713" },
   "In wachtrij": { color: "#6366f1", bg: "#eef2ff", icon: "\u23F3" },
@@ -105,6 +107,12 @@ function ReadyDropdown({ ready, onChange }) {
     Object.keys(readyConfig).map((key) => h("option", { key: key, value: key }, readyConfig[key].icon + " " + key))
   );
 }
+function UrenDropdown({ uren, onChange }) {
+  const val = uren === "-" ? "Maak een keuze" : uren;
+  return h("select", { value: val, onClick: (e) => e.stopPropagation(), onChange: (e) => { e.stopPropagation(); onChange(e.target.value === "Maak een keuze" ? "-" : e.target.value); }, style: { fontSize: "12px", fontWeight: 600, color: "#0369a1", backgroundColor: "#e0f2fe", borderRadius: "6px", padding: "3px 8px", border: "1.5px solid #0369a133", cursor: "pointer", fontFamily: "inherit", outline: "none", WebkitAppearance: "none", appearance: "none", backgroundImage: "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='5' viewBox='0 0 8 5'%3E%3Cpath d='M0 0l4 5 4-5z' fill='%2394a3b8'/%3E%3C/svg%3E\")", backgroundRepeat: "no-repeat", backgroundPosition: "right 6px center", paddingRight: "20px" } },
+    UREN_OPTIONS.map((opt) => h("option", { key: opt, value: opt }, opt === "Maak een keuze" ? "\uD83D\uDD50 -" : "\uD83D\uDD50 " + opt))
+  );
+}
 function SyncBadge({ connected }) {
   return h("span", { style: { fontSize: "10px", fontWeight: 600, color: connected ? "#10b981" : "#94a3b8", backgroundColor: connected ? "rgba(16,185,129,0.1)" : "rgba(148,163,184,0.1)", borderRadius: "12px", padding: "3px 8px", display: "inline-flex", alignItems: "center", gap: "4px" } },
     h("span", { style: { width: "6px", height: "6px", borderRadius: "50%", backgroundColor: connected ? "#10b981" : "#94a3b8", display: "inline-block" } }),
@@ -121,7 +129,7 @@ function NoteInput({ onSubmit, saving, userName }) {
   );
 }
 
-function JobCard({ job, expanded, onToggle, notes, onAddNote, onDeleteNote, userName, onStatusChange }) {
+function JobCard({ job, expanded, onToggle, notes, onAddNote, onDeleteNote, userName, onStatusChange, onUrenChange }) {
   const autoNaam = [job.merk, job.model].filter(Boolean).join(" ");
   const allNotes = notes || [];
   const hasNotes = allNotes.length > 0 || job.opmerking;
@@ -141,7 +149,7 @@ function JobCard({ job, expanded, onToggle, notes, onAddNote, onDeleteNote, user
     ),
     // Info row
     h("div", { style: { display: "flex", gap: "10px", alignItems: "center", flexWrap: "wrap" } },
-      job.uren !== "-" ? h("span", { style: { fontSize: "12px", color: "#64748b" } }, "\uD83D\uDD50 " + job.uren) : null,
+      h(UrenDropdown, { uren: job.uren, onChange: (val) => onUrenChange(job.id, val) }),
       h(ConditieBadge, { conditie: job.conditie }),
       h("span", { style: { fontSize: "12px", color: "#64748b" } }, "\uD83D\uDC64 " + job.aangemeld),
       job.klant ? h("span", { style: { fontSize: "12px", color: "#1e293b", fontWeight: 600 } }, "\uD83C\uDFF7\uFE0F " + job.klant) : null,
@@ -180,7 +188,7 @@ function JobCard({ job, expanded, onToggle, notes, onAddNote, onDeleteNote, user
   );
 }
 
-function DaySection({ dag, datum, jobs, notes, onAddNote, onDeleteNote, userName, onStatusChange }) {
+function DaySection({ dag, datum, jobs, notes, onAddNote, onDeleteNote, userName, onStatusChange, onUrenChange }) {
   const [expandedId, setExpandedId] = useState(null);
   const totalUren = jobs.reduce((sum, j) => { const m = j.uren.match(/(\d+)/); return sum + (m ? parseInt(m[1]) : 0); }, 0);
   const dateObj = new Date(datum);
@@ -198,7 +206,7 @@ function DaySection({ dag, datum, jobs, notes, onAddNote, onDeleteNote, userName
       )
     ),
     jobs.sort((a, b) => { const p = { P1: 0, P2: 1, P3: 2 }; return (p[a.prioriteit] || 9) - (p[b.prioriteit] || 9); }).map((job) =>
-      h(JobCard, { key: job.id, job: job, expanded: expandedId === job.id, onToggle: () => setExpandedId(expandedId === job.id ? null : job.id), notes: notes[job.id], onAddNote: (text, door) => onAddNote(job.id, text, door), onDeleteNote: (index) => onDeleteNote(job.id, index), userName: userName, onStatusChange: onStatusChange })
+      h(JobCard, { key: job.id, job: job, expanded: expandedId === job.id, onToggle: () => setExpandedId(expandedId === job.id ? null : job.id), notes: notes[job.id], onAddNote: (text, door) => onAddNote(job.id, text, door), onDeleteNote: (index) => onDeleteNote(job.id, index), userName: userName, onStatusChange: onStatusChange, onUrenChange: onUrenChange })
     )
   );
 }
@@ -210,6 +218,7 @@ function App() {
   const userName = "Serfaas";
   const [lastRefresh, setLastRefresh] = useState(null);
   const [statusOverrides, setStatusOverrides] = useState({});
+  const [urenOverrides, setUrenOverrides] = useState({});
 
   const loadNotes = useCallback(async (week) => {
     if (!APPS_SCRIPT_URL) return;
@@ -226,7 +235,12 @@ function App() {
     return () => clearInterval(interval);
   }, [selectedWeek, loadNotes]);
 
-  const weekData = useMemo(() => INITIAL_DATA.filter((d) => d.week === selectedWeek).map((d) => statusOverrides[d.id] ? { ...d, ready: statusOverrides[d.id] } : d), [selectedWeek, statusOverrides]);
+  const weekData = useMemo(() => INITIAL_DATA.filter((d) => d.week === selectedWeek).map((d) => {
+    let job = d;
+    if (statusOverrides[d.id]) job = { ...job, ready: statusOverrides[d.id] };
+    if (urenOverrides[d.id]) job = { ...job, uren: urenOverrides[d.id] };
+    return job;
+  }), [selectedWeek, statusOverrides, urenOverrides]);
   const filtered = weekData;
 
   const groupedByDay = useMemo(() => {
@@ -246,6 +260,14 @@ function App() {
     if (APPS_SCRIPT_URL) {
       const job = INITIAL_DATA.find((d) => d.id === jobId);
       await apiPost({ action: "updateReady", jobId, week: job ? job.week : selectedWeek, ready: newStatus });
+    }
+  };
+
+  const handleUrenChange = async (jobId, newUren) => {
+    setUrenOverrides((prev) => ({ ...prev, [jobId]: newUren }));
+    if (APPS_SCRIPT_URL) {
+      const job = INITIAL_DATA.find((d) => d.id === jobId);
+      await apiPost({ action: "updateUren", jobId, week: job ? job.week : selectedWeek, uren: newUren });
     }
   };
 
@@ -297,7 +319,7 @@ function App() {
     h("div", { style: { padding: "16px 16px 0" } },
       groupedByDay.length === 0
         ? h("div", { style: { textAlign: "center", padding: "40px 20px", color: "#94a3b8" } }, h("div", { style: { fontSize: "40px", marginBottom: "12px" } }, "\uD83D\uDCCB"), h("div", { style: { fontSize: "15px", fontWeight: 600 } }, "Geen opdrachten deze week"))
-        : groupedByDay.map(([dag, { datum, jobs }]) => h(DaySection, { key: dag, dag, datum, jobs, notes, onAddNote: handleAddNote, onDeleteNote: handleDeleteNote, userName, onStatusChange: handleStatusChange }))
+        : groupedByDay.map(([dag, { datum, jobs }]) => h(DaySection, { key: dag, dag, datum, jobs, notes, onAddNote: handleAddNote, onDeleteNote: handleDeleteNote, userName, onStatusChange: handleStatusChange, onUrenChange: handleUrenChange }))
     )
   );
 }
