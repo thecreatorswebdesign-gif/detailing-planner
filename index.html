@@ -14,6 +14,7 @@
 body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; background: #F5F5F3; min-height: 100vh; }
 select { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; }
 input, button { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; }
+@keyframes spin { to { transform: rotate(360deg); } }
 </style>
 </head>
 <body>
@@ -21,35 +22,52 @@ input, button { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-se
 <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
 <script>
-const { useState, useMemo, useReducer, useEffect, useCallback, createElement: h } = React;
+const { useState, useMemo, useReducer, useEffect, useCallback, useRef, createElement: h } = React;
 
 const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwAbnSgewwmDsyIyp2zTxooB5nQ5Pa3NLgEOLzlO9DcbqyspuDf0mkOe5zj85l7NxJZ/exec";
 
-const INITIAL_DATA = [
-  { id: 1, datum: "2026-03-09", week: "Week 11", dag: "Maandag", aangemeld: "Martijn", prioriteit: "P1", klant: "", merk: "Range Rover", model: "Sport", kleur: "Blauw", chassisnummer: "", kenteken: "H-906-BN", conditie: "Pre-owned", taak: "Detailing compleet", ready: "Ja", uren: "8 uur", opmerking: "Motorkap 3 stappen gepolijst en de andere delen 2 keer" },
-  { id: 2, datum: "2026-03-09", week: "Week 11", dag: "Maandag", aangemeld: "Dennis", prioriteit: "P2", klant: "", merk: "Land Rover", model: "Defender", kleur: "Geel", chassisnummer: "2604594", kenteken: "", conditie: "Nieuw", taak: "Detailing compleet", ready: "Ja", uren: "3 uur", opmerking: "" },
-  { id: 3, datum: "2026-03-10", week: "Week 11", dag: "Dinsdag", aangemeld: "Martijn", prioriteit: "P2", klant: "", merk: "Range Rover", model: "", kleur: "Black", chassisnummer: "345280", kenteken: "", conditie: "Nieuw", taak: "Detailing compleet", ready: "Ja", uren: "1 uur", opmerking: "" },
-  { id: 4, datum: "2026-03-11", week: "Week 11", dag: "Woensdag", aangemeld: "Dennis", prioriteit: "P1", klant: "Bos", merk: "Morgan", model: "", kleur: "Rood", chassisnummer: "", kenteken: "RL-785-H", conditie: "Pre-owned", taak: "Detailing compleet", ready: "Ja", uren: "2 uur", opmerking: "" },
-  { id: 5, datum: "2026-03-11", week: "Week 11", dag: "Woensdag", aangemeld: "Dennis", prioriteit: "P3", klant: "", merk: "Range Rover", model: "Sport", kleur: "Zwart/mat", chassisnummer: "636060", kenteken: "", conditie: "Nieuw", taak: "Detailing compleet", ready: "Ja", uren: "3 uur", opmerking: "" },
-  { id: 6, datum: "2026-03-11", week: "Week 11", dag: "Woensdag", aangemeld: "Dennis", prioriteit: "P3", klant: "", merk: "Land Rover", model: "Defender", kleur: "Zwart", chassisnummer: "2615381", kenteken: "", conditie: "Nieuw", taak: "Detailing compleet", ready: "Ja", uren: "3 uur", opmerking: "" },
-  { id: 8, datum: "2026-03-11", week: "Week 11", dag: "Woensdag", aangemeld: "Serfaas", prioriteit: "P2", klant: "", merk: "Range Rover", model: "Velar", kleur: "Groen wrap", chassisnummer: "279476", kenteken: "", conditie: "Pre-owned", taak: "Detailing compleet", ready: "Ja", uren: "2 uur", opmerking: "Klacht over binnenkant en buiten" },
-  { id: 9, datum: "2026-03-13", week: "Week 11", dag: "Vrijdag", aangemeld: "Martijn", prioriteit: "P2", klant: "", merk: "Land Rover", model: "Defender", kleur: "Bronz", chassisnummer: "", kenteken: "JFJ-02-S", conditie: "Pre-owned", taak: "Detailing compleet", ready: "Ja", uren: "5 uur", opmerking: "" },
-  { id: 10, datum: "2026-03-13", week: "Week 11", dag: "Vrijdag", aangemeld: "Martijn", prioriteit: "P2", klant: "", merk: "Range Rover", model: "Sport", kleur: "Zwart", chassisnummer: "616293", kenteken: "", conditie: "Nieuw", taak: "Detailing compleet", ready: "Ja", uren: "3 uur", opmerking: "2,5 uur" },
-  { id: 11, datum: "2026-03-16", week: "Week 12", dag: "Maandag", aangemeld: "Dennis", prioriteit: "P2", klant: "", merk: "Land Rover", model: "Defender", kleur: "Barasco grey", chassisnummer: "2615929", kenteken: "", conditie: "Nieuw", taak: "Detailing compleet", ready: "In wachtrij", uren: "-", opmerking: "" },
-  { id: 12, datum: "2026-03-16", week: "Week 12", dag: "Maandag", aangemeld: "Dennis", prioriteit: "P2", klant: "", merk: "Land Rover", model: "Defender", kleur: "Grijs", chassisnummer: "2615701", kenteken: "", conditie: "Nieuw", taak: "Detailing compleet", ready: "In wachtrij", uren: "-", opmerking: "" },
-  { id: 13, datum: "2026-03-16", week: "Week 12", dag: "Maandag", aangemeld: "Dennis", prioriteit: "P2", klant: "", merk: "Land Rover", model: "Defender", kleur: "Zwart", chassisnummer: "2617949", kenteken: "", conditie: "Nieuw", taak: "Detailing compleet", ready: "In wachtrij", uren: "-", opmerking: "" },
-  { id: 17, datum: "2026-03-18", week: "Week 12", dag: "Woensdag", aangemeld: "Dennis", prioriteit: "P1", klant: "Vreeburg", merk: "Range Rover", model: "", kleur: "Gold", chassisnummer: "363558", kenteken: "", conditie: "Nieuw", taak: "Detailing compleet", ready: "In wachtrij", uren: "-", opmerking: "" },
-  { id: 14, datum: "2026-03-18", week: "Week 12", dag: "Woensdag", aangemeld: "Dennis", prioriteit: "P1", klant: "van Strien", merk: "Land Rover", model: "Defender", kleur: "Woolstone green", chassisnummer: "2619854", kenteken: "", conditie: "Nieuw", taak: "Detailing compleet", ready: "In wachtrij", uren: "-", opmerking: "" },
-  { id: 20, datum: "2026-03-23", week: "Week 13", dag: "Maandag", aangemeld: "Dennis", prioriteit: "P1", klant: "Leegwater", merk: "Bentley", model: "Continental", kleur: "Bruin", chassisnummer: "", kenteken: "T-944-JB", conditie: "Pre-owned", taak: "Detailing compleet", ready: "In wachtrij", uren: "-", opmerking: "" },
-  { id: 7, datum: "2026-03-25", week: "Week 13", dag: "Woensdag", aangemeld: "Dennis", prioriteit: "P1", klant: "van Rossum", merk: "Range Rover", model: "", kleur: "Zwart", chassisnummer: "", kenteken: "JNR-16-K", conditie: "Nalopen", taak: "Detailing compleet", ready: "In wachtrij", uren: "-", opmerking: "" },
-  { id: 29, datum: "2026-03-27", week: "Week 13", dag: "Vrijdag", aangemeld: "Dennis", prioriteit: "P1", klant: "Koene", merk: "Range Rover", model: "Sport", kleur: "Blauw", chassisnummer: "", kenteken: "H-906-BN", conditie: "Nalopen", taak: "Detailing compleet", ready: "In wachtrij", uren: "-", opmerking: "" },
-];
+// Bereken dynamische weken: vorige week, deze week, volgende week
+function getWeekNumber(date) {
+  const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+  const dayNum = d.getUTCDay() || 7;
+  d.setUTCDate(d.getUTCDate() + 4 - dayNum);
+  const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+  return Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
+}
 
-const WEEKS = [
-  { key: "Week 11", label: "W11", dateRange: "9 \u2013 13 mrt" },
-  { key: "Week 12", label: "W12", dateRange: "16 \u2013 20 mrt" },
-  { key: "Week 13", label: "W13", dateRange: "23 \u2013 27 mrt" },
-];
+function getWeekDates(date) {
+  const d = new Date(date);
+  const day = d.getDay() || 7;
+  const monday = new Date(d);
+  monday.setDate(d.getDate() - day + 1);
+  const friday = new Date(monday);
+  friday.setDate(monday.getDate() + 4);
+  const months = ["jan", "feb", "mrt", "apr", "mei", "jun", "jul", "aug", "sep", "okt", "nov", "dec"];
+  const mStart = months[monday.getMonth()];
+  const mEnd = months[friday.getMonth()];
+  if (mStart === mEnd) {
+    return monday.getDate() + " \u2013 " + friday.getDate() + " " + mEnd;
+  }
+  return monday.getDate() + " " + mStart + " \u2013 " + friday.getDate() + " " + mEnd;
+}
+
+function buildDynamicWeeks() {
+  const now = new Date();
+  const weeks = [];
+  for (let offset = -1; offset <= 1; offset++) {
+    const d = new Date(now);
+    d.setDate(d.getDate() + offset * 7);
+    const wn = getWeekNumber(d);
+    const key = "Week " + wn;
+    const label = "W" + wn;
+    const dateRange = getWeekDates(d);
+    weeks.push({ key, label, dateRange, isCurrent: offset === 0 });
+  }
+  return weeks;
+}
+
+const DYNAMIC_WEEKS = buildDynamicWeeks();
+const CURRENT_WEEK = DYNAMIC_WEEKS.find((w) => w.isCurrent).key;
 
 const UREN_OPTIONS = ["Maak een keuze", "1 uur", "1,5 uur", "2 uur", "2,5 uur", "3 uur", "3,5 uur", "4 uur", "4,5 uur", "5 uur", "5,5 uur", "6 uur", "6,5 uur", "7 uur", "7,5 uur", "8 uur", "8,5 uur", "9 uur", "9,5 uur", "10 uur", "11 uur", "12 uur", "13 uur", "14 uur", "15 uur"];
 
@@ -79,6 +97,7 @@ async function apiGet(params) {
 function notesReducer(state, action) {
   switch (action.type) {
     case "SET_NOTES": return { ...state, ...action.notes };
+    case "CLEAR_NOTES": return {};
     case "ADD_NOTE": return { ...state, [action.jobId]: [...(state[action.jobId] || []), { text: action.text, door: action.door || "", tijd: action.tijd || new Date().toLocaleString("nl-NL", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }), saving: action.saving || false }] };
     case "NOTE_SAVED": return { ...state, [action.jobId]: (state[action.jobId] || []).map((n, i) => i === action.index ? { ...n, saving: false } : n) };
     case "DELETE_NOTE": return { ...state, [action.jobId]: (state[action.jobId] || []).filter((_, i) => i !== action.index) };
@@ -95,14 +114,20 @@ function ReadyDropdown({ ready, onChange }) {
 }
 
 function UrenDropdown({ uren, onChange }) {
-  const val = uren === "-" ? "Maak een keuze" : uren;
+  const val = (!uren || uren === "-" || uren === "") ? "Maak een keuze" : uren;
   const hasValue = val !== "Maak een keuze";
   return h("select", { value: val, onClick: (e) => e.stopPropagation(), onChange: (e) => { e.stopPropagation(); onChange(e.target.value === "Maak een keuze" ? "-" : e.target.value); }, style: { fontSize: "11px", fontWeight: 600, color: hasValue ? "#000000" : "#888888", backgroundColor: "transparent", borderRadius: "999px", padding: "3px 20px 3px 8px", border: "1px solid " + (hasValue ? "#000000" : "#CCCCCC"), cursor: "pointer", outline: "none", WebkitAppearance: "none", appearance: "none", backgroundImage: "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='5' viewBox='0 0 8 5'%3E%3Cpath d='M0 0l4 5 4-5z' fill='%23888888'/%3E%3C/svg%3E\")", backgroundRepeat: "no-repeat", backgroundPosition: "right 6px center" } },
     UREN_OPTIONS.map((opt) => h("option", { key: opt, value: opt, style: { color: "#000", backgroundColor: "#fff" } }, opt === "Maak een keuze" ? "\u2014" : opt))
   );
 }
 
-function SyncBadge({ connected }) {
+function SyncBadge({ connected, loading }) {
+  if (loading) {
+    return h("span", { style: { fontSize: "10px", fontWeight: 500, color: "#888", letterSpacing: "0.02em", display: "inline-flex", alignItems: "center", gap: "5px" } },
+      h("span", { style: { width: "10px", height: "10px", border: "1.5px solid #CCC", borderTopColor: "#000", borderRadius: "50%", display: "inline-block", animation: "spin 0.6s linear infinite" } }),
+      "Laden\u2026"
+    );
+  }
   return h("span", { style: { fontSize: "10px", fontWeight: 500, color: connected ? "#000" : "#888", letterSpacing: "0.02em" } },
     h("span", { style: { width: "5px", height: "5px", borderRadius: "50%", backgroundColor: connected ? "#000" : "#CCC", display: "inline-block", marginRight: "5px", verticalAlign: "middle" } }),
     connected ? "Live" : "Offline"
@@ -126,32 +151,29 @@ function JobCard({ job, expanded, onToggle, notes, onAddNote, onDeleteNote, user
   const prio = job.prioriteit;
 
   return h("div", { onClick: onToggle, style: { backgroundColor: "#FFFFFF", borderRadius: "16px", padding: "18px 20px", marginBottom: "8px", border: "1px solid #E5E5E5", cursor: "pointer", transition: "all 0.2s ease" } },
-    // Top row
     h("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "10px" } },
       h("div", { style: { flex: 1 } },
-        h("div", { style: { fontSize: "17px", fontWeight: 800, color: "#000000", letterSpacing: "-0.02em", lineHeight: 1.1 } }, autoNaam),
-        h("div", { style: { fontSize: "12px", fontWeight: 500, color: "#888888", marginTop: "4px" } }, job.kleur + (job.kenteken ? " \u00B7 " + job.kenteken : ""))
+        h("div", { style: { fontSize: "17px", fontWeight: 800, color: "#000000", letterSpacing: "-0.02em", lineHeight: 1.1 } }, autoNaam || "Onbekend"),
+        h("div", { style: { fontSize: "12px", fontWeight: 500, color: "#888888", marginTop: "4px" } }, (job.kleur || "") + (job.kenteken ? " \u00B7 " + job.kenteken : ""))
       ),
       h("div", { style: { display: "flex", alignItems: "center", gap: "8px" } },
-        h("span", { style: { fontSize: "10px", fontWeight: 800, letterSpacing: "0.05em", color: prio === "P1" ? "#000" : "#888", backgroundColor: prio === "P1" ? "#000" : "transparent", color: prio === "P1" ? "#fff" : "#888", borderRadius: "999px", padding: "3px 8px", border: prio === "P1" ? "none" : "1px solid #CCC" } }, prio)
+        prio ? h("span", { style: { fontSize: "10px", fontWeight: 800, letterSpacing: "0.05em", color: prio === "P1" ? "#fff" : "#888", backgroundColor: prio === "P1" ? "#000" : "transparent", borderRadius: "999px", padding: "3px 8px", border: prio === "P1" ? "none" : "1px solid #CCC" } }, prio) : null
       )
     ),
-    // Meta row
     h("div", { style: { display: "flex", gap: "8px", alignItems: "center", flexWrap: "wrap" } },
-      h(ReadyDropdown, { ready: job.ready, onChange: (val) => onStatusChange(job.id, val) }),
+      h(ReadyDropdown, { ready: job.ready || "In wachtrij", onChange: (val) => onStatusChange(job.id, val) }),
       h(UrenDropdown, { uren: job.uren, onChange: (val) => onUrenChange(job.id, val) }),
-      h("span", { style: { fontSize: "11px", fontWeight: 500, color: "#888", borderRadius: "999px", padding: "3px 10px", border: "1px solid #E5E5E5" } }, job.conditie),
-      h("span", { style: { fontSize: "11px", fontWeight: 500, color: "#888" } }, job.aangemeld),
+      job.conditie ? h("span", { style: { fontSize: "11px", fontWeight: 500, color: "#888", borderRadius: "999px", padding: "3px 10px", border: "1px solid #E5E5E5" } }, job.conditie) : null,
+      job.aangemeld ? h("span", { style: { fontSize: "11px", fontWeight: 500, color: "#888" } }, job.aangemeld) : null,
       job.klant ? h("span", { style: { fontSize: "11px", fontWeight: 700, color: "#000" } }, job.klant) : null,
       hasNotes && !expanded ? h("span", { style: { fontSize: "10px", fontWeight: 700, color: "#D4A843" } }, (allNotes.length + (job.opmerking ? 1 : 0)) + " notitie" + ((allNotes.length + (job.opmerking ? 1 : 0)) !== 1 ? "s" : "")) : null
     ),
-    // Expanded
     expanded ? h("div", { onClick: (e) => e.stopPropagation(), style: { marginTop: "16px", paddingTop: "16px", borderTop: "1px solid #E5E5E5" } },
       h("div", { style: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px", marginBottom: "14px" } },
-        h("div", null,
+        job.taak ? h("div", null,
           h("div", { style: { fontSize: "10px", fontWeight: 500, color: "#888", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: "2px" } }, "Taak"),
           h("div", { style: { fontSize: "13px", fontWeight: 600, color: "#000" } }, job.taak)
-        ),
+        ) : null,
         job.chassisnummer ? h("div", null,
           h("div", { style: { fontSize: "10px", fontWeight: 500, color: "#888", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: "2px" } }, "Chassis"),
           h("div", { style: { fontSize: "13px", fontWeight: 600, color: "#000" } }, job.chassisnummer)
@@ -186,15 +208,15 @@ function JobCard({ job, expanded, onToggle, notes, onAddNote, onDeleteNote, user
 
 function DaySection({ dag, datum, jobs, notes, onAddNote, onDeleteNote, userName, onStatusChange, onUrenChange }) {
   const [expandedId, setExpandedId] = useState(null);
-  const totalUren = jobs.reduce((sum, j) => { const m = j.uren.match(/(\d+)/); return sum + (m ? parseInt(m[1]) : 0); }, 0);
-  const dateObj = new Date(datum);
-  const dateStr = dateObj.toLocaleDateString("nl-NL", { day: "numeric", month: "short" });
+  const totalUren = jobs.reduce((sum, j) => { const u = j.uren || ""; const m = u.match(/(\d+)/); return sum + (m ? parseInt(m[1]) : 0); }, 0);
+  const dateObj = datum ? new Date(datum) : null;
+  const dateStr = dateObj && !isNaN(dateObj) ? dateObj.toLocaleDateString("nl-NL", { day: "numeric", month: "short" }) : "";
 
   return h("div", { style: { marginBottom: "32px" } },
     h("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: "14px" } },
       h("div", { style: { display: "flex", alignItems: "baseline", gap: "10px" } },
-        h("span", { style: { fontSize: "22px", fontWeight: 900, color: "#000000", letterSpacing: "-0.03em" } }, dag),
-        h("span", { style: { fontSize: "12px", fontWeight: 500, color: "#888888" } }, dateStr)
+        h("span", { style: { fontSize: "22px", fontWeight: 900, color: "#000000", letterSpacing: "-0.03em" } }, dag || "Onbekend"),
+        dateStr ? h("span", { style: { fontSize: "12px", fontWeight: 500, color: "#888888" } }, dateStr) : null
       ),
       h("div", { style: { display: "flex", gap: "12px", alignItems: "baseline" } },
         h("span", { style: { fontSize: "12px", fontWeight: 600, color: "#888" } }, jobs.length + " auto" + (jobs.length !== 1 ? "\u2019s" : "")),
@@ -208,62 +230,71 @@ function DaySection({ dag, datum, jobs, notes, onAddNote, onDeleteNote, userName
 }
 
 function App() {
-  const [selectedWeek, setSelectedWeek] = useState("Week 12");
+  const [selectedWeek, setSelectedWeek] = useState(CURRENT_WEEK);
+  const [jobs, setJobs] = useState([]);
   const [notes, dispatchNotes] = useReducer(notesReducer, {});
   const [isConnected, setIsConnected] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const userName = "Serfaas";
   const [lastRefresh, setLastRefresh] = useState(null);
-  const [statusOverrides, setStatusOverrides] = useState({});
-  const [urenOverrides, setUrenOverrides] = useState({});
+  const jobsRef = useRef([]);
 
-  const loadNotes = useCallback(async (week) => {
+  const loadWeekData = useCallback(async (week) => {
     if (!APPS_SCRIPT_URL) return;
-    const result = await apiGet({ action: "getNotes", week });
-    if (result && result.success && result.notes) { dispatchNotes({ type: "SET_NOTES", notes: result.notes }); setIsConnected(true); }
+    setIsLoading(true);
+    try {
+      const [weekResult, notesResult] = await Promise.all([
+        apiGet({ action: "getWeekData", week }),
+        apiGet({ action: "getNotes", week })
+      ]);
+      if (weekResult && weekResult.success && weekResult.jobs) {
+        setJobs(weekResult.jobs);
+        jobsRef.current = weekResult.jobs;
+        setIsConnected(true);
+      }
+      if (notesResult && notesResult.success && notesResult.notes) {
+        dispatchNotes({ type: "CLEAR_NOTES" });
+        dispatchNotes({ type: "SET_NOTES", notes: notesResult.notes });
+      }
+      setLastRefresh(new Date());
+    } catch (err) {
+      console.error("Laden mislukt:", err);
+    }
+    setIsLoading(false);
   }, []);
 
   useEffect(() => {
     if (!APPS_SCRIPT_URL) return;
-    setIsConnected(true);
-    loadNotes(selectedWeek);
-    setLastRefresh(new Date());
-    const interval = setInterval(() => { loadNotes(selectedWeek); setLastRefresh(new Date()); }, 30000);
+    loadWeekData(selectedWeek);
+    const interval = setInterval(() => { loadWeekData(selectedWeek); }, 30000);
     return () => clearInterval(interval);
-  }, [selectedWeek, loadNotes]);
+  }, [selectedWeek, loadWeekData]);
 
-  const weekData = useMemo(() => INITIAL_DATA.filter((d) => d.week === selectedWeek).map((d) => {
-    let job = d;
-    if (statusOverrides[d.id]) job = { ...job, ready: statusOverrides[d.id] };
-    if (urenOverrides[d.id]) job = { ...job, uren: urenOverrides[d.id] };
-    return job;
-  }), [selectedWeek, statusOverrides, urenOverrides]);
-  const filtered = weekData;
+  const filtered = jobs;
 
   const groupedByDay = useMemo(() => {
     const map = new Map();
     const dayOrder = ["Maandag", "Dinsdag", "Woensdag", "Donderdag", "Vrijdag", "Zaterdag", "Zondag"];
-    filtered.forEach((job) => { if (!map.has(job.dag)) map.set(job.dag, { datum: job.datum, jobs: [] }); map.get(job.dag).jobs.push(job); });
-    return Array.from(map.entries()).sort((a, b) => dayOrder.indexOf(a[0]) - dayOrder.indexOf(b[0]));
+    filtered.forEach((job) => { const dag = job.dag || "Onbekend"; if (!map.has(dag)) map.set(dag, { datum: job.datum, jobs: [] }); map.get(dag).jobs.push(job); });
+    return Array.from(map.entries()).sort((a, b) => { const ia = dayOrder.indexOf(a[0]); const ib = dayOrder.indexOf(b[0]); return (ia === -1 ? 99 : ia) - (ib === -1 ? 99 : ib); });
   }, [filtered]);
 
   const totalAutos = filtered.length;
-  const totalUren = filtered.reduce((sum, j) => { const m = j.uren.match(/(\d+)/); return sum + (m ? parseInt(m[1]) : 0); }, 0);
+  const totalUren = filtered.reduce((sum, j) => { const u = j.uren || ""; const m = u.match(/(\d+)/); return sum + (m ? parseInt(m[1]) : 0); }, 0);
 
-  const handleWeekChange = (weekKey) => { setSelectedWeek(weekKey); };
+  const handleWeekChange = (weekKey) => { setSelectedWeek(weekKey); setJobs([]); dispatchNotes({ type: "CLEAR_NOTES" }); };
 
   const handleStatusChange = async (jobId, newStatus) => {
-    setStatusOverrides((prev) => ({ ...prev, [jobId]: newStatus }));
+    setJobs((prev) => prev.map((j) => j.id.toString() === jobId.toString() ? { ...j, ready: newStatus } : j));
     if (APPS_SCRIPT_URL) {
-      const job = INITIAL_DATA.find((d) => d.id === jobId);
-      await apiPost({ action: "updateReady", jobId, week: job ? job.week : selectedWeek, ready: newStatus });
+      await apiPost({ action: "updateReady", jobId, week: selectedWeek, ready: newStatus });
     }
   };
 
   const handleUrenChange = async (jobId, newUren) => {
-    setUrenOverrides((prev) => ({ ...prev, [jobId]: newUren }));
+    setJobs((prev) => prev.map((j) => j.id.toString() === jobId.toString() ? { ...j, uren: newUren } : j));
     if (APPS_SCRIPT_URL) {
-      const job = INITIAL_DATA.find((d) => d.id === jobId);
-      await apiPost({ action: "updateUren", jobId, week: job ? job.week : selectedWeek, uren: newUren });
+      await apiPost({ action: "updateUren", jobId, week: selectedWeek, uren: newUren });
     }
   };
 
@@ -271,8 +302,7 @@ function App() {
     const tijd = new Date().toLocaleString("nl-NL", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
     dispatchNotes({ type: "ADD_NOTE", jobId, text, door, tijd, saving: !!APPS_SCRIPT_URL });
     if (APPS_SCRIPT_URL) {
-      const job = INITIAL_DATA.find((d) => d.id === jobId);
-      const result = await apiPost({ action: "addNote", jobId, week: job ? job.week : selectedWeek, text: text });
+      const result = await apiPost({ action: "addNote", jobId, week: selectedWeek, text: text });
       const currentNotes = notes[jobId] || [];
       dispatchNotes({ type: "NOTE_SAVED", jobId, index: currentNotes.length });
     }
@@ -281,30 +311,28 @@ function App() {
   const handleDeleteNote = async (jobId, index) => {
     dispatchNotes({ type: "DELETE_NOTE", jobId, index });
     if (APPS_SCRIPT_URL) {
-      const job = INITIAL_DATA.find((d) => d.id === jobId);
-      await apiPost({ action: "deleteNote", jobId, week: job ? job.week : selectedWeek, noteIndex: index });
+      await apiPost({ action: "deleteNote", jobId, week: selectedWeek, noteIndex: index });
     }
   };
 
   return h("div", { style: { maxWidth: "430px", margin: "0 auto", backgroundColor: "#F5F5F3", minHeight: "100vh", paddingBottom: "40px" } },
     // Header
     h("div", { style: { backgroundColor: "#FFFFFF", padding: "16px 20px", position: "sticky", top: 0, zIndex: 10, borderBottom: "1px solid #E5E5E5" } },
-      // Status bar
       h("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px", paddingTop: "4px" } },
         h("div", { style: { fontSize: "11px", fontWeight: 500, color: "#888", textTransform: "uppercase", letterSpacing: "0.08em" } }, "Detailing Planner"),
         h("div", { style: { display: "flex", alignItems: "center", gap: "12px" } },
-          h(SyncBadge, { connected: isConnected }),
+          h(SyncBadge, { connected: isConnected, loading: isLoading }),
           lastRefresh ? h("span", { style: { fontSize: "10px", color: "#CCC" } }, lastRefresh.toLocaleTimeString("nl-NL", { hour: "2-digit", minute: "2-digit" })) : null
         )
       ),
       // Week switcher
       h("div", { style: { display: "flex", gap: "6px", marginBottom: "20px" } },
-        WEEKS.map((w) => h("button", { key: w.key, onClick: () => handleWeekChange(w.key), style: { flex: 1, padding: "12px 8px", borderRadius: "12px", border: "none", backgroundColor: selectedWeek === w.key ? "#000000" : "transparent", color: selectedWeek === w.key ? "#FFFFFF" : "#888888", cursor: "pointer", transition: "all 0.2s ease", textAlign: "center" } },
+        DYNAMIC_WEEKS.map((w) => h("button", { key: w.key, onClick: () => handleWeekChange(w.key), style: { flex: 1, padding: "12px 8px", borderRadius: "12px", border: "none", backgroundColor: selectedWeek === w.key ? "#000000" : "transparent", color: selectedWeek === w.key ? "#FFFFFF" : "#888888", cursor: "pointer", transition: "all 0.2s ease", textAlign: "center" } },
           h("div", { style: { fontSize: "16px", fontWeight: 800, letterSpacing: "-0.02em" } }, w.label),
           h("div", { style: { fontSize: "10px", fontWeight: 500, marginTop: "2px", opacity: 0.7 } }, w.dateRange)
         ))
       ),
-      // Stats — hero numbers
+      // Stats
       h("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "flex-end", paddingBottom: "4px" } },
         h("div", null,
           h("div", { style: { fontSize: "10px", fontWeight: 500, color: "#888", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: "2px" } }, "Auto\u2019s"),
@@ -326,12 +354,17 @@ function App() {
     ),
     // Day sections
     h("div", { style: { padding: "24px 20px 0" } },
-      groupedByDay.length === 0
+      isLoading && jobs.length === 0
         ? h("div", { style: { textAlign: "center", padding: "60px 20px", color: "#888" } },
-            h("div", { style: { fontSize: "48px", fontWeight: 900, color: "#CCC", letterSpacing: "-0.04em", marginBottom: "8px" } }, "\u2014"),
-            h("div", { style: { fontSize: "14px", fontWeight: 600 } }, "Geen opdrachten deze week")
+            h("div", { style: { width: "24px", height: "24px", border: "2px solid #E5E5E5", borderTopColor: "#000", borderRadius: "50%", animation: "spin 0.6s linear infinite", margin: "0 auto 16px" } }),
+            h("div", { style: { fontSize: "14px", fontWeight: 600 } }, "Data laden\u2026")
           )
-        : groupedByDay.map(([dag, { datum, jobs }]) => h(DaySection, { key: dag, dag, datum, jobs, notes, onAddNote: handleAddNote, onDeleteNote: handleDeleteNote, userName, onStatusChange: handleStatusChange, onUrenChange: handleUrenChange }))
+        : groupedByDay.length === 0
+          ? h("div", { style: { textAlign: "center", padding: "60px 20px", color: "#888" } },
+              h("div", { style: { fontSize: "48px", fontWeight: 900, color: "#CCC", letterSpacing: "-0.04em", marginBottom: "8px" } }, "\u2014"),
+              h("div", { style: { fontSize: "14px", fontWeight: 600 } }, "Geen opdrachten deze week")
+            )
+          : groupedByDay.map(([dag, { datum, jobs: dayJobs }]) => h(DaySection, { key: dag, dag, datum, jobs: dayJobs, notes, onAddNote: handleAddNote, onDeleteNote: handleDeleteNote, userName, onStatusChange: handleStatusChange, onUrenChange: handleUrenChange }))
     )
   );
 }
