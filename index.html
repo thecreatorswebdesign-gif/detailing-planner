@@ -140,7 +140,8 @@ function JobCard({ job, expanded, onToggle, notes, onAddNote, onDeleteNote, user
     h("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "8px" } },
       h("div", { style: { flex: 1 } },
         h("div", { style: { fontSize: "15px", fontWeight: 700, color: "#1e293b", marginBottom: "2px" } }, autoNaam),
-        h("div", { style: { fontSize: "13px", color: "#64748b" } }, job.kleur + (job.kenteken ? " \u2022 " + job.kenteken : ""))
+        h("div", { style: { fontSize: "13px", color: "#64748b", marginBottom: "4px" } }, job.kleur + (job.kenteken ? " \u2022 " + job.kenteken : "")),
+        h(UrenDropdown, { uren: job.uren, onChange: (val) => onUrenChange(job.id, val) })
       ),
       h("div", { style: { display: "flex", flexDirection: "column", alignItems: "flex-end", gap: "4px" } },
         h(PriorityBadge, { priority: job.prioriteit }),
@@ -149,7 +150,6 @@ function JobCard({ job, expanded, onToggle, notes, onAddNote, onDeleteNote, user
     ),
     // Info row
     h("div", { style: { display: "flex", gap: "10px", alignItems: "center", flexWrap: "wrap" } },
-      h(UrenDropdown, { uren: job.uren, onChange: (val) => onUrenChange(job.id, val) }),
       h(ConditieBadge, { conditie: job.conditie }),
       h("span", { style: { fontSize: "12px", color: "#64748b" } }, "\uD83D\uDC64 " + job.aangemeld),
       job.klant ? h("span", { style: { fontSize: "12px", color: "#1e293b", fontWeight: 600 } }, "\uD83C\uDFF7\uFE0F " + job.klant) : null,
