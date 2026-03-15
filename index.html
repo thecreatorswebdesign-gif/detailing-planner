@@ -202,7 +202,7 @@ function DaySection({ dag, datum, jobs, notes, onAddNote, onDeleteNote, userName
       ),
       h("div", { style: { display: "flex", gap: "10px", alignItems: "center" } },
         h("span", { style: { fontSize: "12px", color: "#64748b", backgroundColor: "#f1f5f9", padding: "4px 10px", borderRadius: "20px", fontWeight: 600 } }, jobs.length + " auto" + (jobs.length !== 1 ? "'s" : "")),
-        totalUren > 0 ? h("span", { style: { fontSize: "12px", color: "#0369a1", backgroundColor: "#e0f2fe", padding: "4px 10px", borderRadius: "20px", fontWeight: 600 } }, "~" + totalUren + " uur") : null
+        totalUren > 0 ? h("span", { style: { fontSize: "12px", color: "#0369a1", backgroundColor: "#e0f2fe", padding: "4px 10px", borderRadius: "20px", fontWeight: 600 } }, totalUren + " uur") : null
       )
     ),
     jobs.sort((a, b) => { const p = { P1: 0, P2: 1, P3: 2 }; return (p[a.prioriteit] || 9) - (p[b.prioriteit] || 9); }).map((job) =>
@@ -310,7 +310,7 @@ function App() {
       // Stats
       h("div", { style: { display: "flex", gap: "10px" } },
         h("div", { style: { flex: 1, backgroundColor: "rgba(255,255,255,0.08)", borderRadius: "10px", padding: "10px 8px", textAlign: "center" } }, h("div", { style: { fontSize: "20px", fontWeight: 800 } }, totalAutos), h("div", { style: { fontSize: "10px", color: "#94a3b8" } }, "Auto's")),
-        h("div", { style: { flex: 1, backgroundColor: "rgba(255,255,255,0.08)", borderRadius: "10px", padding: "10px 8px", textAlign: "center" } }, h("div", { style: { fontSize: "20px", fontWeight: 800 } }, totalUren > 0 ? "~" + totalUren : "-"), h("div", { style: { fontSize: "10px", color: "#94a3b8" } }, "Uren")),
+        h("div", { style: { flex: 1, backgroundColor: "rgba(255,255,255,0.08)", borderRadius: "10px", padding: "10px 8px", textAlign: "center" } }, h("div", { style: { fontSize: "20px", fontWeight: 800 } }, totalUren > 0 ? totalUren : "-"), h("div", { style: { fontSize: "10px", color: "#94a3b8" } }, "Uren")),
         h("div", { style: { flex: 1, backgroundColor: "rgba(255,255,255,0.08)", borderRadius: "10px", padding: "10px 8px", textAlign: "center" } }, h("div", { style: { fontSize: "20px", fontWeight: 800 } }, groupedByDay.length), h("div", { style: { fontSize: "10px", color: "#94a3b8" } }, "Dagen")),
         h("div", { style: { flex: 1, backgroundColor: "rgba(255,255,255,0.08)", borderRadius: "10px", padding: "10px 8px", textAlign: "center" } }, h("div", { style: { fontSize: "20px", fontWeight: 800 } }, filtered.filter((j) => j.ready === "Ja").length), h("div", { style: { fontSize: "10px", color: "#94a3b8" } }, "Klaar"))
       )
