@@ -23,23 +23,23 @@ const { useState, useMemo, useReducer, useEffect, useCallback, createElement: h 
 const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwAbnSgewwmDsyIyp2zTxooB5nQ5Pa3NLgEOLzlO9DcbqyspuDf0mkOe5zj85l7NxJZ/exec";
 
 const INITIAL_DATA = [
-  { id: 1, datum: "2026-03-09", week: "Week 11", dag: "Maandag", aangemeld: "Martijn", prioriteit: "P1", klant: "", merk: "Range Rover", model: "Sport", kleur: "Blauw", chassisnummer: "", kenteken: "H-906-BN", conditie: "Pre-owned", taak: "Detailing compleet", ready: "Klaar", uren: "8 uur", opmerking: "Motorkap 3 stappen gepolijst en de andere delen 2 keer" },
-  { id: 2, datum: "2026-03-09", week: "Week 11", dag: "Maandag", aangemeld: "Dennis", prioriteit: "P2", klant: "", merk: "Land Rover", model: "Defender", kleur: "Geel", chassisnummer: "2604594", kenteken: "", conditie: "Nieuw", taak: "Detailing compleet", ready: "Klaar", uren: "3 uur", opmerking: "" },
-  { id: 3, datum: "2026-03-10", week: "Week 11", dag: "Dinsdag", aangemeld: "Martijn", prioriteit: "P2", klant: "", merk: "Range Rover", model: "", kleur: "Black", chassisnummer: "345280", kenteken: "", conditie: "Nieuw", taak: "Detailing compleet", ready: "Klaar", uren: "1 uur", opmerking: "" },
-  { id: 4, datum: "2026-03-11", week: "Week 11", dag: "Woensdag", aangemeld: "Dennis", prioriteit: "P1", klant: "Bos", merk: "Morgan", model: "", kleur: "Rood", chassisnummer: "", kenteken: "RL-785-H", conditie: "Pre-owned", taak: "Detailing compleet", ready: "Klaar", uren: "2 uur", opmerking: "" },
-  { id: 5, datum: "2026-03-11", week: "Week 11", dag: "Woensdag", aangemeld: "Dennis", prioriteit: "P3", klant: "", merk: "Range Rover", model: "Sport", kleur: "Zwart/mat", chassisnummer: "636060", kenteken: "", conditie: "Nieuw", taak: "Detailing compleet", ready: "Klaar", uren: "3 uur", opmerking: "" },
-  { id: 6, datum: "2026-03-11", week: "Week 11", dag: "Woensdag", aangemeld: "Dennis", prioriteit: "P3", klant: "", merk: "Land Rover", model: "Defender", kleur: "Zwart", chassisnummer: "2615381", kenteken: "", conditie: "Nieuw", taak: "Detailing compleet", ready: "Klaar", uren: "3 uur", opmerking: "" },
-  { id: 8, datum: "2026-03-11", week: "Week 11", dag: "Woensdag", aangemeld: "Serfaas", prioriteit: "P2", klant: "", merk: "Range Rover", model: "Velar", kleur: "Groen wrap", chassisnummer: "279476", kenteken: "", conditie: "Pre-owned", taak: "Detailing compleet", ready: "Klaar", uren: "2 uur", opmerking: "Klacht over binnenkant en buiten" },
-  { id: 9, datum: "2026-03-13", week: "Week 11", dag: "Vrijdag", aangemeld: "Martijn", prioriteit: "P2", klant: "", merk: "Land Rover", model: "Defender", kleur: "Bronz", chassisnummer: "", kenteken: "JFJ-02-S", conditie: "Pre-owned", taak: "Detailing compleet", ready: "Klaar", uren: "5 uur", opmerking: "" },
-  { id: 10, datum: "2026-03-13", week: "Week 11", dag: "Vrijdag", aangemeld: "Martijn", prioriteit: "P2", klant: "", merk: "Range Rover", model: "Sport", kleur: "Zwart", chassisnummer: "616293", kenteken: "", conditie: "Nieuw", taak: "Detailing compleet", ready: "Klaar", uren: "3 uur", opmerking: "2,5 uur" },
-  { id: 11, datum: "2026-03-16", week: "Week 12", dag: "Maandag", aangemeld: "Dennis", prioriteit: "P2", klant: "", merk: "Land Rover", model: "Defender", kleur: "Barasco grey", chassisnummer: "2615929", kenteken: "", conditie: "Nieuw", taak: "Detailing compleet", ready: "Wachtrij", uren: "-", opmerking: "" },
-  { id: 12, datum: "2026-03-16", week: "Week 12", dag: "Maandag", aangemeld: "Dennis", prioriteit: "P2", klant: "", merk: "Land Rover", model: "Defender", kleur: "Grijs", chassisnummer: "2615701", kenteken: "", conditie: "Nieuw", taak: "Detailing compleet", ready: "Wachtrij", uren: "-", opmerking: "" },
-  { id: 13, datum: "2026-03-16", week: "Week 12", dag: "Maandag", aangemeld: "Dennis", prioriteit: "P2", klant: "", merk: "Land Rover", model: "Defender", kleur: "Zwart", chassisnummer: "2617949", kenteken: "", conditie: "Nieuw", taak: "Detailing compleet", ready: "Wachtrij", uren: "-", opmerking: "" },
-  { id: 17, datum: "2026-03-18", week: "Week 12", dag: "Woensdag", aangemeld: "Dennis", prioriteit: "P1", klant: "Vreeburg", merk: "Range Rover", model: "", kleur: "Gold", chassisnummer: "363558", kenteken: "", conditie: "Nieuw", taak: "Detailing compleet", ready: "Wachtrij", uren: "-", opmerking: "" },
-  { id: 14, datum: "2026-03-18", week: "Week 12", dag: "Woensdag", aangemeld: "Dennis", prioriteit: "P1", klant: "van Strien", merk: "Land Rover", model: "Defender", kleur: "Woolstone green", chassisnummer: "2619854", kenteken: "", conditie: "Nieuw", taak: "Detailing compleet", ready: "Wachtrij", uren: "-", opmerking: "" },
-  { id: 20, datum: "2026-03-23", week: "Week 13", dag: "Maandag", aangemeld: "Dennis", prioriteit: "P1", klant: "Leegwater", merk: "Bentley", model: "Continental", kleur: "Bruin", chassisnummer: "", kenteken: "T-944-JB", conditie: "Pre-owned", taak: "Detailing compleet", ready: "Wachtrij", uren: "-", opmerking: "" },
-  { id: 7, datum: "2026-03-25", week: "Week 13", dag: "Woensdag", aangemeld: "Dennis", prioriteit: "P1", klant: "van Rossum", merk: "Range Rover", model: "", kleur: "Zwart", chassisnummer: "", kenteken: "JNR-16-K", conditie: "Nalopen", taak: "Detailing compleet", ready: "Wachtrij", uren: "-", opmerking: "" },
-  { id: 29, datum: "2026-03-27", week: "Week 13", dag: "Vrijdag", aangemeld: "Dennis", prioriteit: "P1", klant: "Koene", merk: "Range Rover", model: "Sport", kleur: "Blauw", chassisnummer: "", kenteken: "H-906-BN", conditie: "Nalopen", taak: "Detailing compleet", ready: "Wachtrij", uren: "-", opmerking: "" },
+  { id: 1, datum: "2026-03-09", week: "Week 11", dag: "Maandag", aangemeld: "Martijn", prioriteit: "P1", klant: "", merk: "Range Rover", model: "Sport", kleur: "Blauw", chassisnummer: "", kenteken: "H-906-BN", conditie: "Pre-owned", taak: "Detailing compleet", ready: "Ja", uren: "8 uur", opmerking: "Motorkap 3 stappen gepolijst en de andere delen 2 keer" },
+  { id: 2, datum: "2026-03-09", week: "Week 11", dag: "Maandag", aangemeld: "Dennis", prioriteit: "P2", klant: "", merk: "Land Rover", model: "Defender", kleur: "Geel", chassisnummer: "2604594", kenteken: "", conditie: "Nieuw", taak: "Detailing compleet", ready: "Ja", uren: "3 uur", opmerking: "" },
+  { id: 3, datum: "2026-03-10", week: "Week 11", dag: "Dinsdag", aangemeld: "Martijn", prioriteit: "P2", klant: "", merk: "Range Rover", model: "", kleur: "Black", chassisnummer: "345280", kenteken: "", conditie: "Nieuw", taak: "Detailing compleet", ready: "Ja", uren: "1 uur", opmerking: "" },
+  { id: 4, datum: "2026-03-11", week: "Week 11", dag: "Woensdag", aangemeld: "Dennis", prioriteit: "P1", klant: "Bos", merk: "Morgan", model: "", kleur: "Rood", chassisnummer: "", kenteken: "RL-785-H", conditie: "Pre-owned", taak: "Detailing compleet", ready: "Ja", uren: "2 uur", opmerking: "" },
+  { id: 5, datum: "2026-03-11", week: "Week 11", dag: "Woensdag", aangemeld: "Dennis", prioriteit: "P3", klant: "", merk: "Range Rover", model: "Sport", kleur: "Zwart/mat", chassisnummer: "636060", kenteken: "", conditie: "Nieuw", taak: "Detailing compleet", ready: "Ja", uren: "3 uur", opmerking: "" },
+  { id: 6, datum: "2026-03-11", week: "Week 11", dag: "Woensdag", aangemeld: "Dennis", prioriteit: "P3", klant: "", merk: "Land Rover", model: "Defender", kleur: "Zwart", chassisnummer: "2615381", kenteken: "", conditie: "Nieuw", taak: "Detailing compleet", ready: "Ja", uren: "3 uur", opmerking: "" },
+  { id: 8, datum: "2026-03-11", week: "Week 11", dag: "Woensdag", aangemeld: "Serfaas", prioriteit: "P2", klant: "", merk: "Range Rover", model: "Velar", kleur: "Groen wrap", chassisnummer: "279476", kenteken: "", conditie: "Pre-owned", taak: "Detailing compleet", ready: "Ja", uren: "2 uur", opmerking: "Klacht over binnenkant en buiten" },
+  { id: 9, datum: "2026-03-13", week: "Week 11", dag: "Vrijdag", aangemeld: "Martijn", prioriteit: "P2", klant: "", merk: "Land Rover", model: "Defender", kleur: "Bronz", chassisnummer: "", kenteken: "JFJ-02-S", conditie: "Pre-owned", taak: "Detailing compleet", ready: "Ja", uren: "5 uur", opmerking: "" },
+  { id: 10, datum: "2026-03-13", week: "Week 11", dag: "Vrijdag", aangemeld: "Martijn", prioriteit: "P2", klant: "", merk: "Range Rover", model: "Sport", kleur: "Zwart", chassisnummer: "616293", kenteken: "", conditie: "Nieuw", taak: "Detailing compleet", ready: "Ja", uren: "3 uur", opmerking: "2,5 uur" },
+  { id: 11, datum: "2026-03-16", week: "Week 12", dag: "Maandag", aangemeld: "Dennis", prioriteit: "P2", klant: "", merk: "Land Rover", model: "Defender", kleur: "Barasco grey", chassisnummer: "2615929", kenteken: "", conditie: "Nieuw", taak: "Detailing compleet", ready: "In wachtrij", uren: "-", opmerking: "" },
+  { id: 12, datum: "2026-03-16", week: "Week 12", dag: "Maandag", aangemeld: "Dennis", prioriteit: "P2", klant: "", merk: "Land Rover", model: "Defender", kleur: "Grijs", chassisnummer: "2615701", kenteken: "", conditie: "Nieuw", taak: "Detailing compleet", ready: "In wachtrij", uren: "-", opmerking: "" },
+  { id: 13, datum: "2026-03-16", week: "Week 12", dag: "Maandag", aangemeld: "Dennis", prioriteit: "P2", klant: "", merk: "Land Rover", model: "Defender", kleur: "Zwart", chassisnummer: "2617949", kenteken: "", conditie: "Nieuw", taak: "Detailing compleet", ready: "In wachtrij", uren: "-", opmerking: "" },
+  { id: 17, datum: "2026-03-18", week: "Week 12", dag: "Woensdag", aangemeld: "Dennis", prioriteit: "P1", klant: "Vreeburg", merk: "Range Rover", model: "", kleur: "Gold", chassisnummer: "363558", kenteken: "", conditie: "Nieuw", taak: "Detailing compleet", ready: "In wachtrij", uren: "-", opmerking: "" },
+  { id: 14, datum: "2026-03-18", week: "Week 12", dag: "Woensdag", aangemeld: "Dennis", prioriteit: "P1", klant: "van Strien", merk: "Land Rover", model: "Defender", kleur: "Woolstone green", chassisnummer: "2619854", kenteken: "", conditie: "Nieuw", taak: "Detailing compleet", ready: "In wachtrij", uren: "-", opmerking: "" },
+  { id: 20, datum: "2026-03-23", week: "Week 13", dag: "Maandag", aangemeld: "Dennis", prioriteit: "P1", klant: "Leegwater", merk: "Bentley", model: "Continental", kleur: "Bruin", chassisnummer: "", kenteken: "T-944-JB", conditie: "Pre-owned", taak: "Detailing compleet", ready: "In wachtrij", uren: "-", opmerking: "" },
+  { id: 7, datum: "2026-03-25", week: "Week 13", dag: "Woensdag", aangemeld: "Dennis", prioriteit: "P1", klant: "van Rossum", merk: "Range Rover", model: "", kleur: "Zwart", chassisnummer: "", kenteken: "JNR-16-K", conditie: "Nalopen", taak: "Detailing compleet", ready: "In wachtrij", uren: "-", opmerking: "" },
+  { id: 29, datum: "2026-03-27", week: "Week 13", dag: "Vrijdag", aangemeld: "Dennis", prioriteit: "P1", klant: "Koene", merk: "Range Rover", model: "Sport", kleur: "Blauw", chassisnummer: "", kenteken: "H-906-BN", conditie: "Nalopen", taak: "Detailing compleet", ready: "In wachtrij", uren: "-", opmerking: "" },
 ];
 
 const WEEKS = [
@@ -59,8 +59,9 @@ const conditieConfig = {
   Nalopen: { color: "#f97316", bg: "#fff7ed" },
 };
 const readyConfig = {
-  Klaar: { color: "#10b981", bg: "#ecfdf5", icon: "\u2713" },
-  Wachtrij: { color: "#6366f1", bg: "#eef2ff", icon: "\u23F3" },
+  Ja: { color: "#10b981", bg: "#ecfdf5", icon: "\u2713" },
+  "In wachtrij": { color: "#6366f1", bg: "#eef2ff", icon: "\u23F3" },
+  "Mee bezig": { color: "#f59e0b", bg: "#fffbeb", icon: "\uD83D\uDD27" },
 };
 
 async function apiPost(data) {
@@ -99,7 +100,7 @@ function ConditieBadge({ conditie }) {
   return h("span", { style: { fontSize: "11px", fontWeight: 600, color: c.color, backgroundColor: c.bg, borderRadius: "6px", padding: "2px 8px" } }, conditie);
 }
 function ReadyBadge({ ready }) {
-  const c = readyConfig[ready] || readyConfig.Wachtrij;
+  const c = readyConfig[ready] || readyConfig["In wachtrij"];
   return h("span", { style: { fontSize: "11px", fontWeight: 600, color: c.color, backgroundColor: c.bg, borderRadius: "6px", padding: "2px 8px" } }, c.icon + " " + ready);
 }
 function SyncBadge({ connected }) {
@@ -278,7 +279,7 @@ function App() {
         h("div", { style: { flex: 1, backgroundColor: "rgba(255,255,255,0.08)", borderRadius: "10px", padding: "10px 8px", textAlign: "center" } }, h("div", { style: { fontSize: "20px", fontWeight: 800 } }, totalAutos), h("div", { style: { fontSize: "10px", color: "#94a3b8" } }, "Auto's")),
         h("div", { style: { flex: 1, backgroundColor: "rgba(255,255,255,0.08)", borderRadius: "10px", padding: "10px 8px", textAlign: "center" } }, h("div", { style: { fontSize: "20px", fontWeight: 800 } }, totalUren > 0 ? "~" + totalUren : "-"), h("div", { style: { fontSize: "10px", color: "#94a3b8" } }, "Uren")),
         h("div", { style: { flex: 1, backgroundColor: "rgba(255,255,255,0.08)", borderRadius: "10px", padding: "10px 8px", textAlign: "center" } }, h("div", { style: { fontSize: "20px", fontWeight: 800 } }, groupedByDay.length), h("div", { style: { fontSize: "10px", color: "#94a3b8" } }, "Dagen")),
-        h("div", { style: { flex: 1, backgroundColor: "rgba(255,255,255,0.08)", borderRadius: "10px", padding: "10px 8px", textAlign: "center" } }, h("div", { style: { fontSize: "20px", fontWeight: 800 } }, filtered.filter((j) => j.ready === "Klaar").length), h("div", { style: { fontSize: "10px", color: "#94a3b8" } }, "Klaar"))
+        h("div", { style: { flex: 1, backgroundColor: "rgba(255,255,255,0.08)", borderRadius: "10px", padding: "10px 8px", textAlign: "center" } }, h("div", { style: { fontSize: "20px", fontWeight: 800 } }, filtered.filter((j) => j.ready === "Ja").length), h("div", { style: { fontSize: "10px", color: "#94a3b8" } }, "Klaar"))
       )
     ),
     // Day sections
