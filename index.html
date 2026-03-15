@@ -239,11 +239,10 @@ function App() {
 
   const handleAddNote = async (jobId, text, door) => {
     const tijd = new Date().toLocaleString("nl-NL", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
-    const noteText = door ? "[" + door + "] " + text : text;
     dispatchNotes({ type: "ADD_NOTE", jobId, text, door, tijd, saving: !!APPS_SCRIPT_URL });
     if (APPS_SCRIPT_URL) {
       const job = INITIAL_DATA.find((d) => d.id === jobId);
-      const result = await apiPost({ action: "addNote", jobId, week: job ? job.week : selectedWeek, text: noteText });
+      const result = await apiPost({ action: "addNote", jobId, week: job ? job.week : selectedWeek, text: text });
       const currentNotes = notes[jobId] || [];
       dispatchNotes({ type: "NOTE_SAVED", jobId, index: currentNotes.length });
     }
