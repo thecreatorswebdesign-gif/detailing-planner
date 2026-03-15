@@ -5,12 +5,15 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="theme-color" content="#0f172a">
+<meta name="theme-color" content="#000000">
 <title>Detailing Planner</title>
-<link rel="manifest" href="data:application/json;base64,eyJuYW1lIjoiRGV0YWlsaW5nIFBsYW5uZXIiLCJzaG9ydF9uYW1lIjoiRGV0YWlsaW5nIiwiZGlzcGxheSI6InN0YW5kYWxvbmUiLCJ0aGVtZV9jb2xvciI6IiMwZjE3MmEiLCJiYWNrZ3JvdW5kX2NvbG9yIjoiI2Y4ZmFmYyJ9">
+<link rel="manifest" href="data:application/json;base64,eyJuYW1lIjoiRGV0YWlsaW5nIFBsYW5uZXIiLCJzaG9ydF9uYW1lIjoiRGV0YWlsaW5nIiwiZGlzcGxheSI6InN0YW5kYWxvbmUiLCJ0aGVtZV9jb2xvciI6IiMwMDAwMDAiLCJiYWNrZ3JvdW5kX2NvbG9yIjoiI2ZmZmZmZiJ9">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 <style>
 * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f8fafc; min-height: 100vh; }
+body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; background: #F5F5F3; min-height: 100vh; }
+select { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; }
+input, button { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; }
 </style>
 </head>
 <body>
@@ -43,27 +46,17 @@ const INITIAL_DATA = [
 ];
 
 const WEEKS = [
-  { key: "Week 11", label: "Week 11", dateRange: "9 - 13 mrt" },
-  { key: "Week 12", label: "Week 12", dateRange: "16 - 20 mrt" },
-  { key: "Week 13", label: "Week 13", dateRange: "23 - 27 mrt" },
+  { key: "Week 11", label: "W11", dateRange: "9 \u2013 13 mrt" },
+  { key: "Week 12", label: "W12", dateRange: "16 \u2013 20 mrt" },
+  { key: "Week 13", label: "W13", dateRange: "23 \u2013 27 mrt" },
 ];
 
-const priorityConfig = {
-  P1: { color: "#ef4444", bg: "#fef2f2", border: "#fecaca", label: "P1" },
-  P2: { color: "#f59e0b", bg: "#fffbeb", border: "#fde68a", label: "P2" },
-  P3: { color: "#3b82f6", bg: "#eff6ff", border: "#bfdbfe", label: "P3" },
-};
-const conditieConfig = {
-  Nieuw: { color: "#10b981", bg: "#ecfdf5" },
-  "Pre-owned": { color: "#8b5cf6", bg: "#f5f3ff" },
-  Nalopen: { color: "#f97316", bg: "#fff7ed" },
-};
 const UREN_OPTIONS = ["Maak een keuze", "1 uur", "1,5 uur", "2 uur", "2,5 uur", "3 uur", "3,5 uur", "4 uur", "4,5 uur", "5 uur", "5,5 uur", "6 uur", "6,5 uur", "7 uur", "7,5 uur", "8 uur", "8,5 uur", "9 uur", "9,5 uur", "10 uur", "11 uur", "12 uur", "13 uur", "14 uur", "15 uur"];
 
 const readyConfig = {
-  Ja: { color: "#10b981", bg: "#ecfdf5", icon: "\u2713" },
-  "In wachtrij": { color: "#6366f1", bg: "#eef2ff", icon: "\u23F3" },
-  "Mee bezig": { color: "#f59e0b", bg: "#fffbeb", icon: "\uD83D\uDD27" },
+  Ja: { label: "Klaar", icon: "\u2713" },
+  "In wachtrij": { label: "Wachtrij", icon: "\u23F3" },
+  "Mee bezig": { label: "Bezig", icon: "\u25B6" },
 };
 
 async function apiPost(data) {
@@ -93,39 +86,35 @@ function notesReducer(state, action) {
   }
 }
 
-function PriorityBadge({ priority }) {
-  const c = priorityConfig[priority] || priorityConfig.P2;
-  return h("span", { style: { fontSize: "11px", fontWeight: 700, color: c.color, backgroundColor: c.bg, border: "1px solid " + c.border, borderRadius: "6px", padding: "2px 8px" } }, c.label);
-}
-function ConditieBadge({ conditie }) {
-  const c = conditieConfig[conditie] || { color: "#6b7280", bg: "#f3f4f6" };
-  return h("span", { style: { fontSize: "11px", fontWeight: 600, color: c.color, backgroundColor: c.bg, borderRadius: "6px", padding: "2px 8px" } }, conditie);
-}
 function ReadyDropdown({ ready, onChange }) {
-  const c = readyConfig[ready] || readyConfig["In wachtrij"];
-  return h("select", { value: ready, onClick: (e) => e.stopPropagation(), onChange: (e) => { e.stopPropagation(); onChange(e.target.value); }, style: { fontSize: "11px", fontWeight: 600, color: c.color, backgroundColor: c.bg, borderRadius: "6px", padding: "3px 8px", border: "1.5px solid " + c.color + "33", cursor: "pointer", fontFamily: "inherit", outline: "none", WebkitAppearance: "none", appearance: "none", backgroundImage: "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='5' viewBox='0 0 8 5'%3E%3Cpath d='M0 0l4 5 4-5z' fill='%2394a3b8'/%3E%3C/svg%3E\")", backgroundRepeat: "no-repeat", backgroundPosition: "right 6px center", paddingRight: "20px" } },
-    Object.keys(readyConfig).map((key) => h("option", { key: key, value: key }, readyConfig[key].icon + " " + key))
+  const isKlaar = ready === "Ja";
+  const isBezig = ready === "Mee bezig";
+  return h("select", { value: ready, onClick: (e) => e.stopPropagation(), onChange: (e) => { e.stopPropagation(); onChange(e.target.value); }, style: { fontSize: "11px", fontWeight: 700, letterSpacing: "0.05em", textTransform: "uppercase", color: isKlaar ? "#FFFFFF" : isBezig ? "#000000" : "#888888", backgroundColor: isKlaar ? "#000000" : isBezig ? "#D4A843" : "transparent", borderRadius: "999px", padding: "4px 22px 4px 10px", border: isKlaar ? "1.5px solid #000" : isBezig ? "1.5px solid #D4A843" : "1.5px solid #CCCCCC", cursor: "pointer", outline: "none", WebkitAppearance: "none", appearance: "none", backgroundImage: "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='5' viewBox='0 0 8 5'%3E%3Cpath d='M0 0l4 5 4-5z' fill='" + (isKlaar ? "%23FFFFFF" : isBezig ? "%23000000" : "%23888888") + "'/%3E%3C/svg%3E\")", backgroundRepeat: "no-repeat", backgroundPosition: "right 8px center" } },
+    Object.keys(readyConfig).map((key) => h("option", { key: key, value: key, style: { color: "#000", backgroundColor: "#fff" } }, readyConfig[key].icon + " " + readyConfig[key].label))
   );
 }
+
 function UrenDropdown({ uren, onChange }) {
   const val = uren === "-" ? "Maak een keuze" : uren;
-  return h("select", { value: val, onClick: (e) => e.stopPropagation(), onChange: (e) => { e.stopPropagation(); onChange(e.target.value === "Maak een keuze" ? "-" : e.target.value); }, style: { fontSize: "12px", fontWeight: 600, color: "#0369a1", backgroundColor: "#e0f2fe", borderRadius: "6px", padding: "3px 8px", border: "1.5px solid #0369a133", cursor: "pointer", fontFamily: "inherit", outline: "none", WebkitAppearance: "none", appearance: "none", backgroundImage: "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='5' viewBox='0 0 8 5'%3E%3Cpath d='M0 0l4 5 4-5z' fill='%2394a3b8'/%3E%3C/svg%3E\")", backgroundRepeat: "no-repeat", backgroundPosition: "right 6px center", paddingRight: "20px" } },
-    UREN_OPTIONS.map((opt) => h("option", { key: opt, value: opt }, opt === "Maak een keuze" ? "\uD83D\uDD50 -" : "\uD83D\uDD50 " + opt))
+  const hasValue = val !== "Maak een keuze";
+  return h("select", { value: val, onClick: (e) => e.stopPropagation(), onChange: (e) => { e.stopPropagation(); onChange(e.target.value === "Maak een keuze" ? "-" : e.target.value); }, style: { fontSize: "11px", fontWeight: 600, color: hasValue ? "#000000" : "#888888", backgroundColor: "transparent", borderRadius: "999px", padding: "3px 20px 3px 8px", border: "1px solid " + (hasValue ? "#000000" : "#CCCCCC"), cursor: "pointer", outline: "none", WebkitAppearance: "none", appearance: "none", backgroundImage: "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='5' viewBox='0 0 8 5'%3E%3Cpath d='M0 0l4 5 4-5z' fill='%23888888'/%3E%3C/svg%3E\")", backgroundRepeat: "no-repeat", backgroundPosition: "right 6px center" } },
+    UREN_OPTIONS.map((opt) => h("option", { key: opt, value: opt, style: { color: "#000", backgroundColor: "#fff" } }, opt === "Maak een keuze" ? "\u2014" : opt))
   );
 }
+
 function SyncBadge({ connected }) {
-  return h("span", { style: { fontSize: "10px", fontWeight: 600, color: connected ? "#10b981" : "#94a3b8", backgroundColor: connected ? "rgba(16,185,129,0.1)" : "rgba(148,163,184,0.1)", borderRadius: "12px", padding: "3px 8px", display: "inline-flex", alignItems: "center", gap: "4px" } },
-    h("span", { style: { width: "6px", height: "6px", borderRadius: "50%", backgroundColor: connected ? "#10b981" : "#94a3b8", display: "inline-block" } }),
-    connected ? "Sync actief" : "Offline modus"
+  return h("span", { style: { fontSize: "10px", fontWeight: 500, color: connected ? "#000" : "#888", letterSpacing: "0.02em" } },
+    h("span", { style: { width: "5px", height: "5px", borderRadius: "50%", backgroundColor: connected ? "#000" : "#CCC", display: "inline-block", marginRight: "5px", verticalAlign: "middle" } }),
+    connected ? "Live" : "Offline"
   );
 }
 
 function NoteInput({ onSubmit, saving, userName }) {
   const [text, setText] = useState("");
   const handleSubmit = (e) => { e.preventDefault(); e.stopPropagation(); if (text.trim() && !saving && userName) { onSubmit(text.trim(), userName); setText(""); } };
-  return h("form", { onSubmit: handleSubmit, onClick: (e) => e.stopPropagation(), style: { display: "flex", gap: "8px", marginTop: "10px" } },
-    h("input", { type: "text", value: text, onChange: (e) => setText(e.target.value), placeholder: "Opmerking toevoegen...", disabled: saving, style: { flex: 1, padding: "8px 12px", borderRadius: "8px", border: "1.5px solid #e2e8f0", fontSize: "13px", outline: "none", fontFamily: "inherit", backgroundColor: saving ? "#f1f5f9" : "#f8fafc", opacity: saving ? 0.6 : 1 } }),
-    h("button", { type: "submit", disabled: saving, style: { padding: "8px 14px", borderRadius: "8px", border: "none", backgroundColor: text.trim() && !saving ? "#0f172a" : "#e2e8f0", color: text.trim() && !saving ? "#fff" : "#94a3b8", fontSize: "13px", fontWeight: 600, cursor: text.trim() && !saving ? "pointer" : "default", fontFamily: "inherit" } }, saving ? "..." : "+")
+  return h("form", { onSubmit: handleSubmit, onClick: (e) => e.stopPropagation(), style: { display: "flex", gap: "8px", marginTop: "12px" } },
+    h("input", { type: "text", value: text, onChange: (e) => setText(e.target.value), placeholder: "Opmerking toevoegen\u2026", disabled: saving, style: { flex: 1, padding: "10px 14px", borderRadius: "12px", border: "1px solid #E5E5E5", fontSize: "13px", fontWeight: 500, outline: "none", backgroundColor: "#FFFFFF", opacity: saving ? 0.5 : 1 } }),
+    h("button", { type: "submit", disabled: saving, style: { width: "40px", height: "40px", borderRadius: "12px", border: "none", backgroundColor: text.trim() && !saving ? "#000000" : "#E5E5E5", color: text.trim() && !saving ? "#FFFFFF" : "#888888", fontSize: "18px", fontWeight: 700, cursor: text.trim() && !saving ? "pointer" : "default", display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.2s ease" } }, "+")
   );
 }
 
@@ -134,57 +123,64 @@ function JobCard({ job, expanded, onToggle, notes, onAddNote, onDeleteNote, user
   const allNotes = notes || [];
   const hasNotes = allNotes.length > 0 || job.opmerking;
   const isSaving = allNotes.some((n) => n.saving);
+  const prio = job.prioriteit;
 
-  return h("div", { onClick: onToggle, style: { backgroundColor: "#ffffff", borderRadius: "12px", padding: "14px 16px", marginBottom: "10px", boxShadow: "0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04)", borderLeft: "4px solid " + (priorityConfig[job.prioriteit] || priorityConfig.P2).color, cursor: "pointer", transition: "all 0.2s ease" } },
+  return h("div", { onClick: onToggle, style: { backgroundColor: "#FFFFFF", borderRadius: "16px", padding: "18px 20px", marginBottom: "8px", border: "1px solid #E5E5E5", cursor: "pointer", transition: "all 0.2s ease" } },
     // Top row
-    h("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "8px" } },
+    h("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "10px" } },
       h("div", { style: { flex: 1 } },
-        h("div", { style: { fontSize: "15px", fontWeight: 700, color: "#1e293b", marginBottom: "2px" } }, autoNaam),
-        h("div", { style: { fontSize: "13px", color: "#64748b", marginBottom: "4px" } }, job.kleur + (job.kenteken ? " \u2022 " + job.kenteken : "")),
-        h(UrenDropdown, { uren: job.uren, onChange: (val) => onUrenChange(job.id, val) })
+        h("div", { style: { fontSize: "17px", fontWeight: 800, color: "#000000", letterSpacing: "-0.02em", lineHeight: 1.1 } }, autoNaam),
+        h("div", { style: { fontSize: "12px", fontWeight: 500, color: "#888888", marginTop: "4px" } }, job.kleur + (job.kenteken ? " \u00B7 " + job.kenteken : ""))
       ),
-      h("div", { style: { display: "flex", flexDirection: "column", alignItems: "flex-end", gap: "4px" } },
-        h(PriorityBadge, { priority: job.prioriteit }),
-        h(ReadyDropdown, { ready: job.ready, onChange: (val) => onStatusChange(job.id, val) })
+      h("div", { style: { display: "flex", alignItems: "center", gap: "8px" } },
+        h("span", { style: { fontSize: "10px", fontWeight: 800, letterSpacing: "0.05em", color: prio === "P1" ? "#000" : "#888", backgroundColor: prio === "P1" ? "#000" : "transparent", color: prio === "P1" ? "#fff" : "#888", borderRadius: "999px", padding: "3px 8px", border: prio === "P1" ? "none" : "1px solid #CCC" } }, prio)
       )
     ),
-    // Info row
-    h("div", { style: { display: "flex", gap: "10px", alignItems: "center", flexWrap: "wrap" } },
-      h(ConditieBadge, { conditie: job.conditie }),
-      h("span", { style: { fontSize: "12px", color: "#64748b" } }, "\uD83D\uDC64 " + job.aangemeld),
-      job.klant ? h("span", { style: { fontSize: "12px", color: "#1e293b", fontWeight: 600 } }, "\uD83C\uDFF7\uFE0F " + job.klant) : null,
-      hasNotes && !expanded ? h("span", { style: { fontSize: "11px", color: "#f59e0b" } }, "\uD83D\uDCAC " + (allNotes.length + (job.opmerking ? 1 : 0))) : null
+    // Meta row
+    h("div", { style: { display: "flex", gap: "8px", alignItems: "center", flexWrap: "wrap" } },
+      h(ReadyDropdown, { ready: job.ready, onChange: (val) => onStatusChange(job.id, val) }),
+      h(UrenDropdown, { uren: job.uren, onChange: (val) => onUrenChange(job.id, val) }),
+      h("span", { style: { fontSize: "11px", fontWeight: 500, color: "#888", borderRadius: "999px", padding: "3px 10px", border: "1px solid #E5E5E5" } }, job.conditie),
+      h("span", { style: { fontSize: "11px", fontWeight: 500, color: "#888" } }, job.aangemeld),
+      job.klant ? h("span", { style: { fontSize: "11px", fontWeight: 700, color: "#000" } }, job.klant) : null,
+      hasNotes && !expanded ? h("span", { style: { fontSize: "10px", fontWeight: 700, color: "#D4A843" } }, (allNotes.length + (job.opmerking ? 1 : 0)) + " notitie" + ((allNotes.length + (job.opmerking ? 1 : 0)) !== 1 ? "s" : "")) : null
     ),
     // Expanded
-    expanded ? h("div", { onClick: (e) => e.stopPropagation(), style: { marginTop: "12px", paddingTop: "12px", borderTop: "1px solid #e2e8f0", fontSize: "13px", color: "#475569" } },
-      h("div", { style: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px", marginBottom: "10px" } },
-        h("div", null, h("span", { style: { color: "#94a3b8" } }, "Taak: "), job.taak),
-        job.chassisnummer ? h("div", null, h("span", { style: { color: "#94a3b8" } }, "Chassis: "), job.chassisnummer) : null,
-        job.kenteken ? h("div", null, h("span", { style: { color: "#94a3b8" } }, "Kenteken: "), job.kenteken) : null
+    expanded ? h("div", { onClick: (e) => e.stopPropagation(), style: { marginTop: "16px", paddingTop: "16px", borderTop: "1px solid #E5E5E5" } },
+      h("div", { style: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px", marginBottom: "14px" } },
+        h("div", null,
+          h("div", { style: { fontSize: "10px", fontWeight: 500, color: "#888", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: "2px" } }, "Taak"),
+          h("div", { style: { fontSize: "13px", fontWeight: 600, color: "#000" } }, job.taak)
+        ),
+        job.chassisnummer ? h("div", null,
+          h("div", { style: { fontSize: "10px", fontWeight: 500, color: "#888", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: "2px" } }, "Chassis"),
+          h("div", { style: { fontSize: "13px", fontWeight: 600, color: "#000" } }, job.chassisnummer)
+        ) : null,
+        job.kenteken ? h("div", null,
+          h("div", { style: { fontSize: "10px", fontWeight: 500, color: "#888", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: "2px" } }, "Kenteken"),
+          h("div", { style: { fontSize: "13px", fontWeight: 600, color: "#000" } }, job.kenteken)
+        ) : null
       ),
-      job.opmerking ? h("div", { style: { padding: "10px 12px", backgroundColor: "#fefce8", borderRadius: "8px", fontSize: "12px", color: "#854d0e", lineHeight: 1.5, marginBottom: "8px" } },
-        "\uD83D\uDCAC " + job.opmerking,
-        h("div", { style: { fontSize: "10px", color: "#a3882b", marginTop: "4px" } }, "Uit spreadsheet")
+      job.opmerking ? h("div", { style: { padding: "12px 14px", backgroundColor: "#F5F5F3", borderRadius: "12px", fontSize: "13px", fontWeight: 500, color: "#000", lineHeight: 1.5, marginBottom: "8px" } },
+        job.opmerking,
+        h("div", { style: { fontSize: "10px", fontWeight: 500, color: "#888", marginTop: "6px", textTransform: "uppercase", letterSpacing: "0.06em" } }, "Spreadsheet")
       ) : null,
       allNotes.map((note, i) =>
-        h("div", { key: i, style: { padding: "10px 12px", backgroundColor: note.saving ? "#f0f4ff" : "#eff6ff", borderRadius: "8px", fontSize: "12px", color: "#1e40af", lineHeight: 1.5, marginBottom: "6px", display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "8px", opacity: note.saving ? 0.7 : 1 } },
+        h("div", { key: i, style: { padding: "12px 14px", backgroundColor: "#F5F5F3", borderRadius: "12px", fontSize: "13px", fontWeight: 500, color: "#000", lineHeight: 1.5, marginBottom: "6px", display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "8px", opacity: note.saving ? 0.5 : 1 } },
           h("div", { style: { flex: 1 } },
-            "\uD83D\uDCDD " + note.text,
-            h("div", { style: { fontSize: "10px", color: "#6b9bd2", marginTop: "4px" } },
-              note.door ? h("span", { style: { fontWeight: 600, color: "#3b82f6" } }, note.door) : null,
-              note.door ? " \u2022 " : null,
+            note.text,
+            h("div", { style: { fontSize: "10px", fontWeight: 500, color: "#888", marginTop: "6px" } },
+              note.door ? h("span", { style: { fontWeight: 700, color: "#000" } }, note.door) : null,
+              note.door ? " \u00B7 " : null,
               note.tijd,
-              note.saving ? " \u2022 Opslaan..." : null
+              note.saving ? " \u00B7 Opslaan\u2026" : null
             )
           ),
-          !note.saving ? h("button", { onClick: (e) => { e.stopPropagation(); onDeleteNote(i); }, style: { background: "none", border: "none", color: "#93c5fd", cursor: "pointer", fontSize: "14px", padding: "0 4px", lineHeight: 1, flexShrink: 0 } }, "\u2715") : null
+          !note.saving ? h("button", { onClick: (e) => { e.stopPropagation(); onDeleteNote(i); }, style: { background: "none", border: "none", color: "#CCC", cursor: "pointer", fontSize: "14px", fontWeight: 700, padding: "0 4px", lineHeight: 1, flexShrink: 0, transition: "color 0.2s" } }, "\u00D7") : null
         )
       ),
       h(NoteInput, { onSubmit: onAddNote, saving: isSaving, userName: userName })
-    ) : null,
-    h("div", { style: { textAlign: "center", marginTop: "6px" } },
-      h("span", { style: { fontSize: "10px", color: "#cbd5e1" } }, expanded ? "\u25B2 Inklappen" : "\u25BC Tik voor details & opmerkingen")
-    )
+    ) : null
   );
 }
 
@@ -194,15 +190,15 @@ function DaySection({ dag, datum, jobs, notes, onAddNote, onDeleteNote, userName
   const dateObj = new Date(datum);
   const dateStr = dateObj.toLocaleDateString("nl-NL", { day: "numeric", month: "short" });
 
-  return h("div", { style: { marginBottom: "24px" } },
-    h("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px", paddingBottom: "8px", borderBottom: "2px solid #e2e8f0" } },
-      h("div", null,
-        h("span", { style: { fontSize: "17px", fontWeight: 800, color: "#0f172a" } }, dag),
-        h("span", { style: { fontSize: "13px", color: "#94a3b8", marginLeft: "8px" } }, dateStr)
+  return h("div", { style: { marginBottom: "32px" } },
+    h("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: "14px" } },
+      h("div", { style: { display: "flex", alignItems: "baseline", gap: "10px" } },
+        h("span", { style: { fontSize: "22px", fontWeight: 900, color: "#000000", letterSpacing: "-0.03em" } }, dag),
+        h("span", { style: { fontSize: "12px", fontWeight: 500, color: "#888888" } }, dateStr)
       ),
-      h("div", { style: { display: "flex", gap: "10px", alignItems: "center" } },
-        h("span", { style: { fontSize: "12px", color: "#64748b", backgroundColor: "#f1f5f9", padding: "4px 10px", borderRadius: "20px", fontWeight: 600 } }, jobs.length + " auto" + (jobs.length !== 1 ? "'s" : "")),
-        totalUren > 0 ? h("span", { style: { fontSize: "12px", color: "#0369a1", backgroundColor: "#e0f2fe", padding: "4px 10px", borderRadius: "20px", fontWeight: 600 } }, totalUren + " uur") : null
+      h("div", { style: { display: "flex", gap: "12px", alignItems: "baseline" } },
+        h("span", { style: { fontSize: "12px", fontWeight: 600, color: "#888" } }, jobs.length + " auto" + (jobs.length !== 1 ? "\u2019s" : "")),
+        totalUren > 0 ? h("span", { style: { fontSize: "12px", fontWeight: 700, color: "#000" } }, totalUren + "u") : null
       )
     ),
     jobs.sort((a, b) => { const p = { P1: 0, P2: 1, P3: 2 }; return (p[a.prioriteit] || 9) - (p[b.prioriteit] || 9); }).map((job) =>
@@ -290,35 +286,51 @@ function App() {
     }
   };
 
-  return h("div", { style: { maxWidth: "480px", margin: "0 auto", fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif", backgroundColor: "#f8fafc", minHeight: "100vh", paddingBottom: "40px" } },
+  return h("div", { style: { maxWidth: "430px", margin: "0 auto", backgroundColor: "#F5F5F3", minHeight: "100vh", paddingBottom: "40px" } },
     // Header
-    h("div", { style: { background: "linear-gradient(135deg, #0f172a 0%, #1e3a5f 100%)", padding: "20px 20px 16px", color: "white", position: "sticky", top: 0, zIndex: 10 } },
-      h("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px" } },
-        h("div", { style: { fontSize: "11px", fontWeight: 600, color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.1em" } }, "\uD83D\uDE97 Detailing Planner"),
-        h("div", { style: { display: "flex", flexDirection: "column", alignItems: "flex-end", gap: "2px" } },
+    h("div", { style: { backgroundColor: "#FFFFFF", padding: "16px 20px", position: "sticky", top: 0, zIndex: 10, borderBottom: "1px solid #E5E5E5" } },
+      // Status bar
+      h("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px", paddingTop: "4px" } },
+        h("div", { style: { fontSize: "11px", fontWeight: 500, color: "#888", textTransform: "uppercase", letterSpacing: "0.08em" } }, "Detailing Planner"),
+        h("div", { style: { display: "flex", alignItems: "center", gap: "12px" } },
           h(SyncBadge, { connected: isConnected }),
-          lastRefresh ? h("span", { style: { fontSize: "9px", color: "#64748b" } }, "Ververst om " + lastRefresh.toLocaleTimeString("nl-NL", { hour: "2-digit", minute: "2-digit", second: "2-digit" })) : null
+          lastRefresh ? h("span", { style: { fontSize: "10px", color: "#CCC" } }, lastRefresh.toLocaleTimeString("nl-NL", { hour: "2-digit", minute: "2-digit" })) : null
         )
       ),
       // Week switcher
-      h("div", { style: { display: "flex", gap: "6px", marginBottom: "14px" } },
-        WEEKS.map((w) => h("button", { key: w.key, onClick: () => handleWeekChange(w.key), style: { flex: 1, padding: "10px 8px", borderRadius: "10px", border: selectedWeek === w.key ? "2px solid #60a5fa" : "2px solid transparent", backgroundColor: selectedWeek === w.key ? "rgba(96,165,250,0.15)" : "rgba(255,255,255,0.06)", color: selectedWeek === w.key ? "#ffffff" : "#94a3b8", cursor: "pointer", transition: "all 0.2s ease", textAlign: "center" } },
-          h("div", { style: { fontSize: "14px", fontWeight: 700 } }, w.label),
-          h("div", { style: { fontSize: "10px", marginTop: "2px", opacity: 0.8 } }, w.dateRange)
+      h("div", { style: { display: "flex", gap: "6px", marginBottom: "20px" } },
+        WEEKS.map((w) => h("button", { key: w.key, onClick: () => handleWeekChange(w.key), style: { flex: 1, padding: "12px 8px", borderRadius: "12px", border: "none", backgroundColor: selectedWeek === w.key ? "#000000" : "transparent", color: selectedWeek === w.key ? "#FFFFFF" : "#888888", cursor: "pointer", transition: "all 0.2s ease", textAlign: "center" } },
+          h("div", { style: { fontSize: "16px", fontWeight: 800, letterSpacing: "-0.02em" } }, w.label),
+          h("div", { style: { fontSize: "10px", fontWeight: 500, marginTop: "2px", opacity: 0.7 } }, w.dateRange)
         ))
       ),
-      // Stats
-      h("div", { style: { display: "flex", gap: "10px" } },
-        h("div", { style: { flex: 1, backgroundColor: "rgba(255,255,255,0.08)", borderRadius: "10px", padding: "10px 8px", textAlign: "center" } }, h("div", { style: { fontSize: "20px", fontWeight: 800 } }, totalAutos), h("div", { style: { fontSize: "10px", color: "#94a3b8" } }, "Auto's")),
-        h("div", { style: { flex: 1, backgroundColor: "rgba(255,255,255,0.08)", borderRadius: "10px", padding: "10px 8px", textAlign: "center" } }, h("div", { style: { fontSize: "20px", fontWeight: 800 } }, totalUren > 0 ? totalUren : "-"), h("div", { style: { fontSize: "10px", color: "#94a3b8" } }, "Uren")),
-        h("div", { style: { flex: 1, backgroundColor: "rgba(255,255,255,0.08)", borderRadius: "10px", padding: "10px 8px", textAlign: "center" } }, h("div", { style: { fontSize: "20px", fontWeight: 800 } }, groupedByDay.length), h("div", { style: { fontSize: "10px", color: "#94a3b8" } }, "Dagen")),
-        h("div", { style: { flex: 1, backgroundColor: "rgba(255,255,255,0.08)", borderRadius: "10px", padding: "10px 8px", textAlign: "center" } }, h("div", { style: { fontSize: "20px", fontWeight: 800 } }, filtered.filter((j) => j.ready === "Ja").length), h("div", { style: { fontSize: "10px", color: "#94a3b8" } }, "Klaar"))
+      // Stats — hero numbers
+      h("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "flex-end", paddingBottom: "4px" } },
+        h("div", null,
+          h("div", { style: { fontSize: "10px", fontWeight: 500, color: "#888", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: "2px" } }, "Auto\u2019s"),
+          h("div", { style: { fontSize: "48px", fontWeight: 900, color: "#000000", letterSpacing: "-0.04em", lineHeight: 0.95 } }, totalAutos)
+        ),
+        h("div", { style: { textAlign: "center" } },
+          h("div", { style: { fontSize: "10px", fontWeight: 500, color: "#888", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: "2px" } }, "Uren"),
+          h("div", { style: { fontSize: "48px", fontWeight: 900, color: "#000000", letterSpacing: "-0.04em", lineHeight: 0.95 } }, totalUren > 0 ? totalUren : "\u2014")
+        ),
+        h("div", { style: { textAlign: "center" } },
+          h("div", { style: { fontSize: "10px", fontWeight: 500, color: "#888", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: "2px" } }, "Dagen"),
+          h("div", { style: { fontSize: "48px", fontWeight: 900, color: "#000000", letterSpacing: "-0.04em", lineHeight: 0.95 } }, groupedByDay.length)
+        ),
+        h("div", { style: { textAlign: "right" } },
+          h("div", { style: { fontSize: "10px", fontWeight: 500, color: "#888", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: "2px" } }, "Klaar"),
+          h("div", { style: { fontSize: "48px", fontWeight: 900, color: "#000000", letterSpacing: "-0.04em", lineHeight: 0.95 } }, filtered.filter((j) => j.ready === "Ja").length)
+        )
       )
     ),
     // Day sections
-    h("div", { style: { padding: "16px 16px 0" } },
+    h("div", { style: { padding: "24px 20px 0" } },
       groupedByDay.length === 0
-        ? h("div", { style: { textAlign: "center", padding: "40px 20px", color: "#94a3b8" } }, h("div", { style: { fontSize: "40px", marginBottom: "12px" } }, "\uD83D\uDCCB"), h("div", { style: { fontSize: "15px", fontWeight: 600 } }, "Geen opdrachten deze week"))
+        ? h("div", { style: { textAlign: "center", padding: "60px 20px", color: "#888" } },
+            h("div", { style: { fontSize: "48px", fontWeight: 900, color: "#CCC", letterSpacing: "-0.04em", marginBottom: "8px" } }, "\u2014"),
+            h("div", { style: { fontSize: "14px", fontWeight: 600 } }, "Geen opdrachten deze week")
+          )
         : groupedByDay.map(([dag, { datum, jobs }]) => h(DaySection, { key: dag, dag, datum, jobs, notes, onAddNote: handleAddNote, onDeleteNote: handleDeleteNote, userName, onStatusChange: handleStatusChange, onUrenChange: handleUrenChange }))
     )
   );
