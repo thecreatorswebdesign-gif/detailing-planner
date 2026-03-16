@@ -15,6 +15,7 @@ body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; back
 select { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; }
 input, button { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; }
 @keyframes spin { to { transform: rotate(360deg); } }
+@keyframes checkPop { 0% { transform: scale(1); } 50% { transform: scale(1.3); } 100% { transform: scale(1); } }
 </style>
 </head>
 <body>
@@ -25,6 +26,33 @@ input, button { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-se
 const { useState, useMemo, useReducer, useEffect, useCallback, useRef, createElement: h } = React;
 
 const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwAbnSgewwmDsyIyp2zTxooB5nQ5Pa3NLgEOLzlO9DcbqyspuDf0mkOe5zj85l7NxJZ/exec";
+
+// Kwaliteitscontrole checklist items
+const CHECKLIST_ITEMS = [
+  { category: "Exterieur", items: [
+    { key: "ext_swirls", label: "Geen swirls / krassen" },
+    { key: "ext_lak", label: "Lak egaal gepolijst" },
+    { key: "ext_coating", label: "Coating aangebracht" },
+    { key: "ext_ramen", label: "Ramen schoon" },
+    { key: "ext_velgen", label: "Velgen schoon" },
+    { key: "ext_banden", label: "Banden gedressed" }
+  ]},
+  { category: "Interieur", items: [
+    { key: "int_dashboard", label: "Dashboard schoon" },
+    { key: "int_stoelen", label: "Stoelen gereinigd" },
+    { key: "int_matten", label: "Vloermatten schoon" },
+    { key: "int_ramen", label: "Ramen binnenkant" },
+    { key: "int_vlekken", label: "Geen vlekken" }
+  ]},
+  { category: "Afwerking", items: [
+    { key: "afw_naden", label: "Naden / kieren schoon" },
+    { key: "afw_deurstijlen", label: "Deurstijlen schoon" },
+    { key: "afw_motor", label: "Motorruimte" },
+    { key: "afw_eindcontrole", label: "Eindcontrole akkoord" }
+  ]}
+];
+
+const ALL_CHECK_KEYS = CHECKLIST_ITEMS.flatMap(c => c.items.map(i => i.key));
 
 // Bereken dynamische weken: vorige week, deze week, volgende week
 function getWeekNumber(date) {
@@ -105,6 +133,20 @@ function notesReducer(state, action) {
   }
 }
 
+function checklistReducer(state, action) {
+  switch (action.type) {
+    case "SET_CHECKLIST": return { ...state, [action.jobId]: action.checks };
+    case "SET_ALL": return { ...state, ...action.data };
+    case "TOGGLE_CHECK": {
+      const current = state[action.jobId] || [];
+      const has = current.includes(action.key);
+      return { ...state, [action.jobId]: has ? current.filter(k => k !== action.key) : [...current, action.key] };
+    }
+    case "CLEAR": return {};
+    default: return state;
+  }
+}
+
 function ReadyDropdown({ ready, onChange }) {
   const isKlaar = ready === "Ja";
   const isBezig = ready === "Mee bezig";
@@ -134,6 +176,87 @@ function SyncBadge({ connected, loading }) {
   );
 }
 
+function ChecklistItem({ checked, label, onToggle }) {
+  const [popping, setPopping] = useState(false);
+  const handleClick = (e) => {
+    e.stopPropagation();
+    if (!checked) setPopping(true);
+    onToggle();
+  };
+  useEffect(() => {
+    if (popping) { const t = setTimeout(() => setPopping(false), 300); return () => clearTimeout(t); }
+  }, [popping]);
+
+  return h("div", {
+    onClick: handleClick,
+    style: { display: "flex", alignItems: "center", gap: "10px", padding: "8px 0", cursor: "pointer", transition: "opacity 0.2s" }
+  },
+    h("div", {
+      style: {
+        width: "22px", height: "22px", borderRadius: "6px", flexShrink: 0,
+        border: checked ? "none" : "2px solid #D5D5D5",
+        backgroundColor: checked ? "#000" : "#fff",
+        display: "flex", alignItems: "center", justifyContent: "center",
+        transition: "all 0.2s ease",
+        animation: popping ? "checkPop 0.3s ease" : "none"
+      }
+    },
+      checked ? h("svg", { width: 12, height: 12, viewBox: "0 0 12 12", fill: "none" },
+        h("path", { d: "M2 6l3 3 5-5", stroke: "#fff", strokeWidth: 2, strokeLinecap: "round", strokeLinejoin: "round" })
+      ) : null
+    ),
+    h("span", {
+      style: {
+        fontSize: "13px", fontWeight: 500,
+        color: checked ? "#AAA" : "#000",
+        textDecoration: checked ? "line-through" : "none",
+        transition: "all 0.2s ease"
+      }
+    }, label)
+  );
+}
+
+function ChecklistSection({ jobId, checks, onToggle }) {
+  const checkedKeys = checks || [];
+  const totalItems = ALL_CHECK_KEYS.length;
+  const checkedCount = checkedKeys.length;
+  const progress = totalItems > 0 ? Math.round((checkedCount / totalItems) * 100) : 0;
+  const allDone = checkedCount === totalItems;
+
+  return h("div", { onClick: (e) => e.stopPropagation(), style: { marginTop: "16px", paddingTop: "16px", borderTop: "1px solid #E5E5E5" } },
+    // Header met voortgang
+    h("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px" } },
+      h("div", { style: { fontSize: "11px", fontWeight: 800, color: "#000", textTransform: "uppercase", letterSpacing: "0.08em" } }, "Kwaliteitscontrole"),
+      h("div", { style: { display: "flex", alignItems: "center", gap: "8px" } },
+        h("span", { style: { fontSize: "11px", fontWeight: 700, color: allDone ? "#16A34A" : "#888" } }, checkedCount + "/" + totalItems),
+        h("span", { style: { fontSize: "11px", fontWeight: 700, color: allDone ? "#16A34A" : "#888" } }, progress + "%")
+      )
+    ),
+    // Voortgangsbalk
+    h("div", { style: { width: "100%", height: "4px", backgroundColor: "#E5E5E5", borderRadius: "2px", marginBottom: "16px", overflow: "hidden" } },
+      h("div", { style: { width: progress + "%", height: "100%", backgroundColor: allDone ? "#16A34A" : "#000", borderRadius: "2px", transition: "width 0.3s ease, background-color 0.3s ease" } })
+    ),
+    // CategorieÃ«n
+    CHECKLIST_ITEMS.map((cat) =>
+      h("div", { key: cat.category, style: { marginBottom: "12px" } },
+        h("div", { style: { fontSize: "10px", fontWeight: 600, color: "#888", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: "4px", paddingLeft: "32px" } }, cat.category),
+        cat.items.map((item) =>
+          h(ChecklistItem, {
+            key: item.key,
+            checked: checkedKeys.includes(item.key),
+            label: item.label,
+            onToggle: () => onToggle(jobId, item.key)
+          })
+        )
+      )
+    ),
+    // Alles klaar melding
+    allDone ? h("div", { style: { textAlign: "center", padding: "12px", backgroundColor: "#F0FDF4", borderRadius: "12px", marginTop: "8px" } },
+      h("span", { style: { fontSize: "13px", fontWeight: 700, color: "#16A34A" } }, "\u2713 Alle controles akkoord")
+    ) : null
+  );
+}
+
 function NoteInput({ onSubmit, saving, userName }) {
   const [text, setText] = useState("");
   const handleSubmit = (e) => { e.preventDefault(); e.stopPropagation(); if (text.trim() && !saving && userName) { onSubmit(text.trim(), userName); setText(""); } };
@@ -143,20 +266,25 @@ function NoteInput({ onSubmit, saving, userName }) {
   );
 }
 
-function JobCard({ job, expanded, onToggle, notes, onAddNote, onDeleteNote, userName, onStatusChange, onUrenChange }) {
+function JobCard({ job, expanded, onToggle, notes, onAddNote, onDeleteNote, userName, onStatusChange, onUrenChange, checks, onCheckToggle }) {
   const autoNaam = [job.merk, job.model].filter(Boolean).join(" ");
   const allNotes = notes || [];
   const hasNotes = allNotes.length > 0 || job.opmerking;
   const isSaving = allNotes.some((n) => n.saving);
   const prio = job.prioriteit;
+  const checkedKeys = checks || [];
+  const checkProgress = ALL_CHECK_KEYS.length > 0 ? Math.round((checkedKeys.length / ALL_CHECK_KEYS.length) * 100) : 0;
+  const allChecked = checkedKeys.length === ALL_CHECK_KEYS.length && ALL_CHECK_KEYS.length > 0;
 
-  return h("div", { onClick: onToggle, style: { backgroundColor: "#FFFFFF", borderRadius: "16px", padding: "18px 20px", marginBottom: "8px", border: "1px solid #E5E5E5", cursor: "pointer", transition: "all 0.2s ease" } },
+  return h("div", { onClick: onToggle, style: { backgroundColor: "#FFFFFF", borderRadius: "16px", padding: "18px 20px", marginBottom: "8px", border: allChecked ? "1.5px solid #16A34A" : "1px solid #E5E5E5", cursor: "pointer", transition: "all 0.2s ease" } },
     h("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "10px" } },
       h("div", { style: { flex: 1 } },
         h("div", { style: { fontSize: "17px", fontWeight: 800, color: "#000000", letterSpacing: "-0.02em", lineHeight: 1.1 } }, autoNaam || "Onbekend"),
         h("div", { style: { fontSize: "12px", fontWeight: 500, color: "#888888", marginTop: "4px" } }, (job.kleur || "") + (job.kenteken ? " \u00B7 " + job.kenteken : ""))
       ),
       h("div", { style: { display: "flex", alignItems: "center", gap: "8px" } },
+        // Checklist mini-indicator (alleen zichtbaar als er checks zijn)
+        checkedKeys.length > 0 && !expanded ? h("span", { style: { fontSize: "10px", fontWeight: 700, color: allChecked ? "#16A34A" : "#888", backgroundColor: allChecked ? "#F0FDF4" : "#F5F5F3", borderRadius: "999px", padding: "3px 8px" } }, allChecked ? "\u2713" : checkProgress + "%") : null,
         prio ? h("span", { style: { fontSize: "10px", fontWeight: 800, letterSpacing: "0.05em", color: prio === "P1" ? "#fff" : "#888", backgroundColor: prio === "P1" ? "#000" : "transparent", borderRadius: "999px", padding: "3px 8px", border: prio === "P1" ? "none" : "1px solid #CCC" } }, prio) : null
       )
     ),
@@ -183,7 +311,10 @@ function JobCard({ job, expanded, onToggle, notes, onAddNote, onDeleteNote, user
           h("div", { style: { fontSize: "13px", fontWeight: 600, color: "#000" } }, job.kenteken)
         ) : null
       ),
-      job.opmerking ? h("div", { style: { padding: "12px 14px", backgroundColor: "#F5F5F3", borderRadius: "12px", fontSize: "13px", fontWeight: 500, color: "#000", lineHeight: 1.5, marginBottom: "8px" } },
+      // Kwaliteitscontrole Checklist
+      h(ChecklistSection, { jobId: job.id, checks: checkedKeys, onToggle: onCheckToggle }),
+      // Opmerkingen
+      job.opmerking ? h("div", { style: { padding: "12px 14px", backgroundColor: "#F5F5F3", borderRadius: "12px", fontSize: "13px", fontWeight: 500, color: "#000", lineHeight: 1.5, marginBottom: "8px", marginTop: "16px" } },
         job.opmerking,
         h("div", { style: { fontSize: "10px", fontWeight: 500, color: "#888", marginTop: "6px", textTransform: "uppercase", letterSpacing: "0.06em" } }, "Spreadsheet")
       ) : null,
@@ -206,7 +337,7 @@ function JobCard({ job, expanded, onToggle, notes, onAddNote, onDeleteNote, user
   );
 }
 
-function DaySection({ dag, datum, jobs, notes, onAddNote, onDeleteNote, userName, onStatusChange, onUrenChange }) {
+function DaySection({ dag, datum, jobs, notes, onAddNote, onDeleteNote, userName, onStatusChange, onUrenChange, checklists, onCheckToggle }) {
   const [expandedId, setExpandedId] = useState(null);
   const totalUren = jobs.reduce((sum, j) => { const u = j.uren || ""; const m = u.match(/(\d+)/); return sum + (m ? parseInt(m[1]) : 0); }, 0);
   const dateObj = datum ? new Date(datum) : null;
@@ -224,7 +355,7 @@ function DaySection({ dag, datum, jobs, notes, onAddNote, onDeleteNote, userName
       )
     ),
     jobs.sort((a, b) => { const p = { P1: 0, P2: 1, P3: 2 }; return (p[a.prioriteit] || 9) - (p[b.prioriteit] || 9); }).map((job) =>
-      h(JobCard, { key: job.id, job: job, expanded: expandedId === job.id, onToggle: () => setExpandedId(expandedId === job.id ? null : job.id), notes: notes[job.id], onAddNote: (text, door) => onAddNote(job.id, text, door), onDeleteNote: (index) => onDeleteNote(job.id, index), userName: userName, onStatusChange: onStatusChange, onUrenChange: onUrenChange })
+      h(JobCard, { key: job.id, job: job, expanded: expandedId === job.id, onToggle: () => setExpandedId(expandedId === job.id ? null : job.id), notes: notes[job.id], onAddNote: (text, door) => onAddNote(job.id, text, door), onDeleteNote: (index) => onDeleteNote(job.id, index), userName: userName, onStatusChange: onStatusChange, onUrenChange: onUrenChange, checks: checklists[job.id], onCheckToggle: onCheckToggle })
     )
   );
 }
@@ -233,6 +364,7 @@ function App() {
   const [selectedWeek, setSelectedWeek] = useState(CURRENT_WEEK);
   const [jobs, setJobs] = useState([]);
   const [notes, dispatchNotes] = useReducer(notesReducer, {});
+  const [checklists, dispatchChecklist] = useReducer(checklistReducer, {});
   const [isConnected, setIsConnected] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const userName = "Serfaas";
@@ -243,9 +375,10 @@ function App() {
     if (!APPS_SCRIPT_URL) return;
     setIsLoading(true);
     try {
-      const [weekResult, notesResult] = await Promise.all([
+      const [weekResult, notesResult, checkResult] = await Promise.all([
         apiGet({ action: "getWeekData", week }),
-        apiGet({ action: "getNotes", week })
+        apiGet({ action: "getNotes", week }),
+        apiGet({ action: "getChecklist", week })
       ]);
       if (weekResult && weekResult.success && weekResult.jobs) {
         setJobs(weekResult.jobs);
@@ -255,6 +388,10 @@ function App() {
       if (notesResult && notesResult.success && notesResult.notes) {
         dispatchNotes({ type: "CLEAR_NOTES" });
         dispatchNotes({ type: "SET_NOTES", notes: notesResult.notes });
+      }
+      if (checkResult && checkResult.success && checkResult.checklists) {
+        dispatchChecklist({ type: "CLEAR" });
+        dispatchChecklist({ type: "SET_ALL", data: checkResult.checklists });
       }
       setLastRefresh(new Date());
     } catch (err) {
@@ -282,7 +419,7 @@ function App() {
   const totalAutos = filtered.length;
   const totalUren = filtered.reduce((sum, j) => { const u = j.uren || ""; const m = u.match(/(\d+)/); return sum + (m ? parseInt(m[1]) : 0); }, 0);
 
-  const handleWeekChange = (weekKey) => { setSelectedWeek(weekKey); setJobs([]); dispatchNotes({ type: "CLEAR_NOTES" }); };
+  const handleWeekChange = (weekKey) => { setSelectedWeek(weekKey); setJobs([]); dispatchNotes({ type: "CLEAR_NOTES" }); dispatchChecklist({ type: "CLEAR" }); };
 
   const handleStatusChange = async (jobId, newStatus) => {
     setJobs((prev) => prev.map((j) => j.id.toString() === jobId.toString() ? { ...j, ready: newStatus } : j));
@@ -295,6 +432,17 @@ function App() {
     setJobs((prev) => prev.map((j) => j.id.toString() === jobId.toString() ? { ...j, uren: newUren } : j));
     if (APPS_SCRIPT_URL) {
       await apiPost({ action: "updateUren", jobId, week: selectedWeek, uren: newUren });
+    }
+  };
+
+  const handleCheckToggle = async (jobId, key) => {
+    dispatchChecklist({ type: "TOGGLE_CHECK", jobId, key });
+    // Bepaal nieuwe staat na toggle
+    const current = checklists[jobId] || [];
+    const has = current.includes(key);
+    const newChecks = has ? current.filter(k => k !== key) : [...current, key];
+    if (APPS_SCRIPT_URL) {
+      await apiPost({ action: "updateChecklist", jobId, week: selectedWeek, checks: newChecks });
     }
   };
 
@@ -364,7 +512,7 @@ function App() {
               h("div", { style: { fontSize: "48px", fontWeight: 900, color: "#CCC", letterSpacing: "-0.04em", marginBottom: "8px" } }, "\u2014"),
               h("div", { style: { fontSize: "14px", fontWeight: 600 } }, "Geen opdrachten deze week")
             )
-          : groupedByDay.map(([dag, { datum, jobs: dayJobs }]) => h(DaySection, { key: dag, dag, datum, jobs: dayJobs, notes, onAddNote: handleAddNote, onDeleteNote: handleDeleteNote, userName, onStatusChange: handleStatusChange, onUrenChange: handleUrenChange }))
+          : groupedByDay.map(([dag, { datum, jobs: dayJobs }]) => h(DaySection, { key: dag, dag, datum, jobs: dayJobs, notes, onAddNote: handleAddNote, onDeleteNote: handleDeleteNote, userName, onStatusChange: handleStatusChange, onUrenChange: handleUrenChange, checklists, onCheckToggle: handleCheckToggle }))
     )
   );
 }
