@@ -103,6 +103,14 @@ function getCheckKeys(type) {
   const list = CHECKLISTS[type];
   return list ? list.flatMap(c => c.items.map(i => i.key)) : [];
 }
+// Map "Status auto" kolom uit Sheets naar checklist type
+function mapStatusToType(statusAuto) {
+  if (!statusAuto) return "";
+  const s = statusAuto.toString().trim().toLowerCase();
+  if (s === "nieuw") return "nieuw";
+  if (s === "pre-owned" || s === "preowned") return "preowned";
+  return ""; // Nalopen, Maak een keuze, etc. → geen checklist
+}
 
 // Bereken dynamische weken: vorige week, deze week, volgende week
 function getWeekNumber(date) {
@@ -266,9 +274,9 @@ function ChecklistItem({ checked, label, onToggle }) {
   );
 }
 
-function ChecklistSection({ jobId, checks, onToggle, autoType, onTypeChange }) {
+function ChecklistSection({ jobId, checks, onToggle, statusAuto }) {
   const checkedKeys = checks || [];
-  const currentType = autoType || "";
+  const currentType = mapStatusToType(statusAuto);
   const checkItems = CHECKLISTS[currentType] || [];
   const allKeys = getCheckKeys(currentType);
   const totalItems = allKeys.length;
@@ -276,42 +284,28 @@ function ChecklistSection({ jobId, checks, onToggle, autoType, onTypeChange }) {
   const progress = totalItems > 0 ? Math.round((checkedCount / totalItems) * 100) : 0;
   const allDone = checkedCount === totalItems && totalItems > 0;
 
+  // Geen checklist bij Nalopen, Maak een keuze, of lege status
+  if (!currentType) return null;
+
+  const typeLabel = currentType === "nieuw" ? "\uD83C\uDD95 Nieuwe auto" : "\uD83D\uDD04 Pre-owned auto";
+
   return h("div", { onClick: (e) => e.stopPropagation(), style: { marginTop: "16px", paddingTop: "16px", borderTop: "1px solid #E5E5E5" } },
-    // Header met type-selector
+    // Header
     h("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px" } },
       h("div", { style: { fontSize: "11px", fontWeight: 800, color: "#000", textTransform: "uppercase", letterSpacing: "0.08em" } }, "Checklist"),
       h("div", { style: { display: "flex", alignItems: "center", gap: "8px" } },
-        currentType ? h("span", { style: { fontSize: "11px", fontWeight: 700, color: allDone ? "#16A34A" : "#888" } }, checkedCount + "/" + totalItems) : null,
-        currentType ? h("span", { style: { fontSize: "11px", fontWeight: 700, color: allDone ? "#16A34A" : "#888" } }, progress + "%") : null
+        h("span", { style: { fontSize: "11px", fontWeight: 700, color: allDone ? "#16A34A" : "#888" } }, checkedCount + "/" + totalItems),
+        h("span", { style: { fontSize: "11px", fontWeight: 700, color: allDone ? "#16A34A" : "#888" } }, progress + "%")
       )
     ),
-    // Type dropdown
-    h("div", { style: { marginBottom: "16px" } },
-      h("select", {
-        value: currentType,
-        onChange: (e) => { e.stopPropagation(); onTypeChange(jobId, e.target.value); },
-        onClick: (e) => e.stopPropagation(),
-        style: {
-          width: "100%", padding: "10px 14px", borderRadius: "12px",
-          border: currentType ? "1.5px solid #000" : "1.5px solid #D5D5D5",
-          fontSize: "13px", fontWeight: 600, color: currentType ? "#000" : "#888",
-          backgroundColor: "#fff", cursor: "pointer", outline: "none",
-          WebkitAppearance: "none", appearance: "none",
-          backgroundImage: "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='5' viewBox='0 0 8 5'%3E%3Cpath d='M0 0l4 5 4-5z' fill='%23888888'/%3E%3C/svg%3E\")",
-          backgroundRepeat: "no-repeat", backgroundPosition: "right 14px center"
-        }
-      },
-        h("option", { value: "", style: { color: "#888" } }, "Kies type auto\u2026"),
-        h("option", { value: "nieuw" }, "\uD83C\uDD95 Nieuwe auto"),
-        h("option", { value: "preowned" }, "\uD83D\uDD04 Pre-owned auto")
-      )
-    ),
-    // Voortgangsbalk (alleen als type gekozen)
-    currentType ? h("div", { style: { width: "100%", height: "4px", backgroundColor: "#E5E5E5", borderRadius: "2px", marginBottom: "16px", overflow: "hidden" } },
+    // Type label (automatisch vanuit Sheets)
+    h("div", { style: { marginBottom: "16px", padding: "10px 14px", borderRadius: "12px", border: "1.5px solid #000", backgroundColor: "#fff", fontSize: "13px", fontWeight: 600, color: "#000" } }, typeLabel),
+    // Voortgangsbalk
+    h("div", { style: { width: "100%", height: "4px", backgroundColor: "#E5E5E5", borderRadius: "2px", marginBottom: "16px", overflow: "hidden" } },
       h("div", { style: { width: progress + "%", height: "100%", backgroundColor: allDone ? "#16A34A" : "#000", borderRadius: "2px", transition: "width 0.3s ease, background-color 0.3s ease" } })
-    ) : null,
-    // CategorieÃ«n (alleen als type gekozen)
-    currentType ? checkItems.map((cat, ci) =>
+    ),
+    // Categorieën
+    checkItems.map((cat, ci) =>
       h("div", { key: cat.category + ci, style: { marginBottom: "12px" } },
         h("div", { style: { fontSize: "10px", fontWeight: 600, color: "#888", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: "4px", paddingLeft: "32px" } }, cat.category),
         cat.items.map((item) =>
@@ -323,7 +317,7 @@ function ChecklistSection({ jobId, checks, onToggle, autoType, onTypeChange }) {
           })
         )
       )
-    ) : null,
+    ),
     // Alles klaar melding
     allDone ? h("div", { style: { textAlign: "center", padding: "12px", backgroundColor: "#F0FDF4", borderRadius: "12px", marginTop: "8px" } },
       h("span", { style: { fontSize: "13px", fontWeight: 700, color: "#16A34A" } }, "\u2713 Alle controles akkoord")
@@ -340,14 +334,14 @@ function NoteInput({ onSubmit, saving, userName }) {
   );
 }
 
-function JobCard({ job, expanded, onToggle, notes, onAddNote, onDeleteNote, userName, onStatusChange, onUrenChange, checks, onCheckToggle, autoType, onTypeChange }) {
+function JobCard({ job, expanded, onToggle, notes, onAddNote, onDeleteNote, userName, onStatusChange, onUrenChange, checks, onCheckToggle }) {
   const autoNaam = [job.merk, job.model].filter(Boolean).join(" ");
   const allNotes = notes || [];
   const hasNotes = allNotes.length > 0 || job.opmerking;
   const isSaving = allNotes.some((n) => n.saving);
   const prio = job.prioriteit;
   const checkedKeys = checks || [];
-  const currentType = autoType || "";
+  const currentType = mapStatusToType(job.statusAuto);
   const allKeys = getCheckKeys(currentType);
   const checkProgress = allKeys.length > 0 ? Math.round((checkedKeys.filter(k => allKeys.includes(k)).length / allKeys.length) * 100) : 0;
   const allChecked = currentType && allKeys.length > 0 && checkedKeys.filter(k => allKeys.includes(k)).length === allKeys.length;
@@ -388,7 +382,7 @@ function JobCard({ job, expanded, onToggle, notes, onAddNote, onDeleteNote, user
         ) : null
       ),
       // Detailing Checklist
-      h(ChecklistSection, { jobId: job.id, checks: checkedKeys, onToggle: onCheckToggle, autoType: currentType, onTypeChange: onTypeChange }),
+      h(ChecklistSection, { jobId: job.id, checks: checkedKeys, onToggle: onCheckToggle, statusAuto: job.statusAuto }),
       // Opmerkingen
       job.opmerking ? h("div", { style: { padding: "12px 14px", backgroundColor: "#F5F5F3", borderRadius: "12px", fontSize: "13px", fontWeight: 500, color: "#000", lineHeight: 1.5, marginBottom: "8px", marginTop: "16px" } },
         job.opmerking,
@@ -413,7 +407,7 @@ function JobCard({ job, expanded, onToggle, notes, onAddNote, onDeleteNote, user
   );
 }
 
-function DaySection({ dag, datum, jobs, notes, onAddNote, onDeleteNote, userName, onStatusChange, onUrenChange, checklists, onCheckToggle, autoTypes, onTypeChange }) {
+function DaySection({ dag, datum, jobs, notes, onAddNote, onDeleteNote, userName, onStatusChange, onUrenChange, checklists, onCheckToggle }) {
   const [expandedId, setExpandedId] = useState(null);
   const totalUren = jobs.reduce((sum, j) => { const u = j.uren || ""; const m = u.match(/(\d+)/); return sum + (m ? parseInt(m[1]) : 0); }, 0);
   const dateObj = datum ? new Date(datum) : null;
@@ -431,7 +425,7 @@ function DaySection({ dag, datum, jobs, notes, onAddNote, onDeleteNote, userName
       )
     ),
     jobs.sort((a, b) => { const p = { P1: 0, P2: 1, P3: 2 }; return (p[a.prioriteit] || 9) - (p[b.prioriteit] || 9); }).map((job) =>
-      h(JobCard, { key: job.id, job: job, expanded: expandedId === job.id, onToggle: () => setExpandedId(expandedId === job.id ? null : job.id), notes: notes[job.id], onAddNote: (text, door) => onAddNote(job.id, text, door), onDeleteNote: (index) => onDeleteNote(job.id, index), userName: userName, onStatusChange: onStatusChange, onUrenChange: onUrenChange, checks: checklists[job.id], onCheckToggle: onCheckToggle, autoType: (autoTypes || {})[job.id], onTypeChange: onTypeChange })
+      h(JobCard, { key: job.id, job: job, expanded: expandedId === job.id, onToggle: () => setExpandedId(expandedId === job.id ? null : job.id), notes: notes[job.id], onAddNote: (text, door) => onAddNote(job.id, text, door), onDeleteNote: (index) => onDeleteNote(job.id, index), userName: userName, onStatusChange: onStatusChange, onUrenChange: onUrenChange, checks: checklists[job.id], onCheckToggle: onCheckToggle })
     )
   );
 }
@@ -441,7 +435,7 @@ function App() {
   const [jobs, setJobs] = useState([]);
   const [notes, dispatchNotes] = useReducer(notesReducer, {});
   const [checklists, dispatchChecklist] = useReducer(checklistReducer, {});
-  const [autoTypes, setAutoTypes] = useState({});
+  // autoTypes nu automatisch via job.statusAuto uit Sheets
   const [isConnected, setIsConnected] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const userName = "Serfaas";
@@ -456,7 +450,7 @@ function App() {
         apiGet({ action: "getWeekData", week }),
         apiGet({ action: "getNotes", week }),
         apiGet({ action: "getChecklist", week }),
-        apiGet({ action: "getAutoTypes", week })
+        Promise.resolve({ success: true }) // autoTypes nu via job.statusAuto
       ]);
       if (weekResult && weekResult.success && weekResult.jobs) {
         setJobs(weekResult.jobs);
@@ -471,9 +465,7 @@ function App() {
         dispatchChecklist({ type: "CLEAR" });
         dispatchChecklist({ type: "SET_ALL", data: checkResult.checklists });
       }
-      if (typeResult && typeResult.success && typeResult.types) {
-        setAutoTypes(typeResult.types);
-      }
+      // autoTypes nu automatisch via job.statusAuto
       setLastRefresh(new Date());
     } catch (err) {
       console.error("Laden mislukt:", err);
@@ -500,7 +492,7 @@ function App() {
   const totalAutos = filtered.length;
   const totalUren = filtered.reduce((sum, j) => { const u = j.uren || ""; const m = u.match(/(\d+)/); return sum + (m ? parseInt(m[1]) : 0); }, 0);
 
-  const handleWeekChange = (weekKey) => { setSelectedWeek(weekKey); setJobs([]); dispatchNotes({ type: "CLEAR_NOTES" }); dispatchChecklist({ type: "CLEAR" }); setAutoTypes({}); };
+  const handleWeekChange = (weekKey) => { setSelectedWeek(weekKey); setJobs([]); dispatchNotes({ type: "CLEAR_NOTES" }); dispatchChecklist({ type: "CLEAR" }); };
 
   const handleStatusChange = async (jobId, newStatus) => {
     setJobs((prev) => prev.map((j) => j.id.toString() === jobId.toString() ? { ...j, ready: newStatus } : j));
@@ -527,15 +519,7 @@ function App() {
     }
   };
 
-  const handleTypeChange = async (jobId, type) => {
-    setAutoTypes(prev => ({ ...prev, [jobId]: type }));
-    // Clear checks als type verandert
-    dispatchChecklist({ type: "SET_CHECKLIST", jobId, checks: [] });
-    if (APPS_SCRIPT_URL) {
-      await apiPost({ action: "updateAutoType", jobId, week: selectedWeek, autoType: type });
-      await apiPost({ action: "updateChecklist", jobId, week: selectedWeek, checks: [] });
-    }
-  };
+  // handleTypeChange niet meer nodig - type komt automatisch uit Sheets statusAuto
 
   const handleAddNote = async (jobId, text, door) => {
     const tijd = new Date().toLocaleString("nl-NL", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
@@ -603,7 +587,7 @@ function App() {
               h("div", { style: { fontSize: "48px", fontWeight: 900, color: "#CCC", letterSpacing: "-0.04em", marginBottom: "8px" } }, "\u2014"),
               h("div", { style: { fontSize: "14px", fontWeight: 600 } }, "Geen opdrachten deze week")
             )
-          : groupedByDay.map(([dag, { datum, jobs: dayJobs }]) => h(DaySection, { key: dag, dag, datum, jobs: dayJobs, notes, onAddNote: handleAddNote, onDeleteNote: handleDeleteNote, userName, onStatusChange: handleStatusChange, onUrenChange: handleUrenChange, checklists, onCheckToggle: handleCheckToggle, autoTypes, onTypeChange: handleTypeChange }))
+          : groupedByDay.map(([dag, { datum, jobs: dayJobs }]) => h(DaySection, { key: dag, dag, datum, jobs: dayJobs, notes, onAddNote: handleAddNote, onDeleteNote: handleDeleteNote, userName, onStatusChange: handleStatusChange, onUrenChange: handleUrenChange, checklists, onCheckToggle: handleCheckToggle }))
     )
   );
 }
