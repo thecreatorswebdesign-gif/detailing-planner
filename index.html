@@ -346,11 +346,21 @@ function JobCard({ job, expanded, onToggle, notes, onAddNote, onDeleteNote, user
   const checkProgress = allKeys.length > 0 ? Math.round((checkedKeys.filter(k => allKeys.includes(k)).length / allKeys.length) * 100) : 0;
   const allChecked = currentType && allKeys.length > 0 && checkedKeys.filter(k => allKeys.includes(k)).length === allKeys.length;
 
+  // Status auto badge config
+  const statusAutoRaw = (job.statusAuto || "").toString().trim();
+  const statusBadge = statusAutoRaw.toLowerCase() === "nieuw" ? { label: "Nieuw", color: "#1D4ED8", bg: "#EFF6FF" }
+    : statusAutoRaw.toLowerCase() === "pre-owned" || statusAutoRaw.toLowerCase() === "preowned" ? { label: "Pre-owned", color: "#92400E", bg: "#FEF3C7" }
+    : statusAutoRaw.toLowerCase() === "nalopen" ? { label: "Nalopen", color: "#9333EA", bg: "#F3E8FF" }
+    : null;
+
   return h("div", { onClick: onToggle, style: { backgroundColor: "#FFFFFF", borderRadius: "16px", padding: "18px 20px", marginBottom: "8px", border: allChecked ? "1.5px solid #16A34A" : "1px solid #E5E5E5", cursor: "pointer", transition: "all 0.2s ease" } },
     h("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "10px" } },
       h("div", { style: { flex: 1 } },
         h("div", { style: { fontSize: "17px", fontWeight: 800, color: "#000000", letterSpacing: "-0.02em", lineHeight: 1.1 } }, autoNaam || "Onbekend"),
-        h("div", { style: { fontSize: "12px", fontWeight: 500, color: "#888888", marginTop: "4px" } }, (job.kleur || "") + (job.kenteken ? " \u00B7 " + job.kenteken : ""))
+        h("div", { style: { fontSize: "12px", fontWeight: 500, color: "#888888", marginTop: "4px", display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" } },
+          (job.kleur || "") + (job.kenteken ? " \u00B7 " + job.kenteken : ""),
+          statusBadge ? h("span", { style: { fontSize: "10px", fontWeight: 700, color: statusBadge.color, backgroundColor: statusBadge.bg, borderRadius: "999px", padding: "2px 8px", letterSpacing: "0.02em" } }, statusBadge.label) : null
+        )
       ),
       h("div", { style: { display: "flex", alignItems: "center", gap: "8px" } },
         // Checklist mini-indicator (alleen zichtbaar als er checks zijn)
